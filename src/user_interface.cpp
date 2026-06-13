@@ -1,15 +1,18 @@
+#include "user_interface.h"
+
+#include "shaders.h"
+#include "textures.h"
+#include "window.h"
+
 #include <cstring>
 #include <glad.h>
+#include <stb_image.h>
 #include <stdexcept>
-#include <user_interface.h>
-#include <window.h>
-#include <shaders.h>
 
 using namespace AriaFlow;
 
 UIRenderer::UIRenderer()
 {
-    // TODO: create shader, load textures, etc
     glGenBuffers(1, &vertex_buffer);
     glGenBuffers(1, &index_buffer);
     next_id = 123;
@@ -55,6 +58,11 @@ UIRenderer::UIRenderer()
         throw std::runtime_error("shader program error: " + error);
     }
     transform_var = glGetUniformLocation(shader_program, "world_to_clip");
+    glUniform1i(glGetUniformLocation(shader_program, "text_atlas"), 0);
+    glUniform1i(glGetUniformLocation(shader_program, "text_bold_atlas"), 1);
+    glUniform1i(glGetUniformLocation(shader_program, "slice_atlas"), 2);
+    glUniform1i(glGetUniformLocation(shader_program, "icon_atlas"), 3);
+    glUniform1i(glGetUniformLocation(shader_program, "line_atlas"), 4);
     glDeleteShader(vertex_shader);
     glDeleteShader(fragment_shader);
 
@@ -78,10 +86,31 @@ UIRenderer::UIRenderer()
     glEnableVertexAttribArray(4);
     glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex),
         reinterpret_cast<void*>((offsetof(Vertex, uv))));
-    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(5);
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+
+    auto make_tex = [](unsigned int* texture, int slot, unsigned char* data, size_t data_size) -> void
+    {
+        glGenTextures(1, texture);
+        glActiveTexture(slot);
+        glBindTexture(GL_TEXTURE_2D, *texture);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        int x, y, c;
+        stbi_uc* pixels = stbi_load_from_memory(data, data_size, &x, &y, &c, 4);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_BGRA, x, y, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+        stbi_image_free(pixels);
+    };
+
+    make_tex(&text_atlas_texture, GL_TEXTURE0, ibm_font, ibm_font_size);
+    make_tex(&text_bold_atlas_texture, GL_TEXTURE1, ibm_font, ibm_font_size);
+    make_tex(&slice_atlas_texture, GL_TEXTURE2, slices, slices_size);
+    make_tex(&icon_atlas_texture, GL_TEXTURE3, icons, icons_size);
+    make_tex(&line_atlas_texture, GL_TEXTURE4, icons, icons_size);
 }
 
 UIRenderer::~UIRenderer() {}
@@ -131,25 +160,26 @@ void UIRenderer::addQuad(float z)
 }
 
 void UIRenderer::addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, float z, glm::vec2 uv_tl,
-    glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent, BackingData& backing_ref)
+    glm::vec2 uv_br, glm::vec4 colour_1, glm::vec4 colour_2, glm::vec4 data_1, glm::vec4 data_2,
+    BackingData& backing_ref)
 {
     addQuad(z, backing_ref);
     BackingDataInternal backing = backing_datas[backing_ref.id];
 
-    updateQuad(p1, p2, p3, p4, uv_tl, uv_br, colour, normal, tangent, backing);
+    updateQuad(p1, p2, p3, p4, uv_tl, uv_br, colour_1, colour_2, data_1, data_2, backing);
 }
 
 void UIRenderer::addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, float z, glm::vec2 uv_tl,
-    glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent)
+    glm::vec2 uv_br, glm::vec4 colour_1, glm::vec4 colour_2, glm::vec4 data_1, glm::vec4 data_2)
 {
     BackingData backing;
-    addQuad(p1, p2, p3, p4, z, uv_tl, uv_br, colour, normal, tangent, backing);
+    addQuad(p1, p2, p3, p4, z, uv_tl, uv_br, colour_1, colour_2, data_1, data_2, backing);
 }
 
-float calculateTextWidth(const std::string& text, TextFormatting formatting, WeakRef<Font> font)
+float calculateTextWidth(const std::string& text, TextFormatting formatting, glm::vec2 text_size)
 {
     return static_cast<float>(
-        (static_cast<int>(text.size()) * (static_cast<int>(font->getGlyphSize().x) + formatting.spacing)) -
+        (static_cast<int>(text.size()) * (static_cast<int>(text_size.x) + formatting.spacing)) -
         formatting.spacing);
 }
 
@@ -191,7 +221,7 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
         backing = backing_datas[backing_ref.id];
     }
 
-    const glm::vec2 char_size = style->font->getGlyphSize();
+    const glm::vec2 char_size = text_size;
     size_t allocated_chars    = backing.vertex_count / 4;
     const size_t chars_wide =
         static_cast<size_t>(glm::floor(static_cast<float>(formatting.clip_bounds.x) / char_size.x));
@@ -210,7 +240,7 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
                 std::string line = text.substr(newline, (next - newline));
                 if (formatting.clip)
                 {
-                    while (calculateTextWidth(line.substr(0, line.size() - 1), formatting, style->font) >
+                    while (calculateTextWidth(line.substr(0, line.size() - 1), formatting, text_size) >
                            formatting.clip_bounds.x)
                         line.pop_back();
                 }
@@ -287,7 +317,7 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
     float longest = 0;
     for (const auto& line : lines)
     {
-        float length = calculateTextWidth(line, formatting, style->font);
+        float length = calculateTextWidth(line, formatting, text_size);
         if (length > longest) longest = length;
     }
 
@@ -305,8 +335,8 @@ void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int l
     BackingData& backing_ref)
 {
     addQuad(position, position + glm::vec2{ size.x, 0 }, position + glm::vec2{ 0, size.y }, position + size,
-        z, { 0, 0 }, { 1, 1 }, fill, glm::vec4{ 1, layer, 0b1111, 0 }, glm::vec4{ size, 0, 0 },
-        backing_ref);
+        z, { 0, 0 }, { 1, 1 }, fill, { 1, 1, 1, 1 }, glm::vec4{ 1, size, layer },
+        glm::vec4{ 0b1111, 0, 0, 0 }, backing_ref);
 }
 
 void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill)
@@ -319,8 +349,8 @@ void UIRenderer::addSimple(glm::vec2 position, float z, glm::vec2 size, int laye
     glm::vec2 uv_size, BackingData& backing_ref)
 {
     addQuad(position, position + glm::vec2{ size.x, 0 }, position + glm::vec2{ 0, size.y }, position + size,
-        z, uv_base, uv_base + uv_size, glm::vec4{ 1, 1, 1, 1 }, glm::vec4{ 2, layer, 0, 0 },
-        glm::vec4{ 0, 0, 0, 0 }, backing_ref);
+        z, uv_base, uv_base + uv_size, glm::vec4{ 1, 1, 1, 1 }, glm::vec4{ 1, 1, 1, 0 },
+        glm::vec4{ 2, size, layer }, glm::vec4{ 0, 0, 0, 0 }, backing_ref);
 }
 
 void UIRenderer::addSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base,
@@ -337,7 +367,7 @@ void UIRenderer::finalise()
         vertices.data(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-    std::vector<uint16_t> final_indices;
+    std::vector<unsigned int> final_indices;
     size_t total_indices = 0;
     for (const auto& arr : indices) total_indices += arr.second.size();
     final_indices.resize(total_indices);
@@ -345,7 +375,7 @@ void UIRenderer::finalise()
 
     for (const auto& arr : indices)
     {
-        memcpy(final_indices.data() + offset, arr.second.data(), arr.second.size() * sizeof(uint16_t));
+        memcpy(final_indices.data() + offset, arr.second.data(), arr.second.size() * sizeof(unsigned int));
         offset += arr.second.size();
     }
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
@@ -356,24 +386,39 @@ void UIRenderer::finalise()
 
 void UIRenderer::draw(Window* window) const
 {
+    window->makeCurrentContext();
+
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
 
     static int scale_factor = 2;
-    int width  = window->getSize().x;
-    int height = window->getSize().y;
+    int width               = window->getSize().x;
+    int height              = window->getSize().y;
     glViewport(0, 0, width, height);
-    glClearColor(0.002f, 0.02f, 0.02f, 1.0f);
+    glClearColor(0.08f, 0.08f, 0.08f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     const float transform[16] = { 2.0f / static_cast<float>(width) * static_cast<float>(scale_factor), 0, 0,
         0, 0, -2.0f / static_cast<float>(height) * static_cast<float>(scale_factor), 0, 0, 0, 0, 1, 0, -1,
         1, 0, 1 };
-    glUseProgram(shader_program);
-    // glBindTexture(GL_TEXTURE_2D, font_texture);
-    // TODO: bind textures
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, text_atlas_texture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, text_bold_atlas_texture);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, slice_atlas_texture);
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, icon_atlas_texture);
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, line_atlas_texture);
     glBindVertexArray(vertex_array_object);
     glUniformMatrix4fv(transform_var, 1, GL_FALSE, transform);
+    glUniform1i(glGetUniformLocation(shader_program, "text_atlas"), 0);
+    glUniform1i(glGetUniformLocation(shader_program, "text_bold_atlas"), 1);
+    glUniform1i(glGetUniformLocation(shader_program, "slice_atlas"), 2);
+    glUniform1i(glGetUniformLocation(shader_program, "icon_atlas"), 3);
+    glUniform1i(glGetUniformLocation(shader_program, "line_atlas"), 4);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glUseProgram(shader_program);
     glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, nullptr);
 }
 
@@ -391,9 +436,9 @@ void UIRenderer::addBacking(BackingData& backing_ref, BackingDataInternal backin
 void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatting,
     const std::string& text, glm::vec3 colour, BackingDataInternal backing)
 {
-    const glm::vec2 uv_size   = style->font->getGlyphUVSize();
-    const glm::vec2 char_size = style->font->getGlyphSize();
-    const float width         = calculateTextWidth(text, formatting, style->font);
+    const glm::vec2 uv_size   = text_size / (text_size + 2.0f);
+    const glm::vec2 char_size = text_size;
+    const float width         = calculateTextWidth(text, formatting, text_size);
 
     glm::vec2 top_left = position;
     if (formatting.align == TEXT_ALIGN_RIGHT) top_left.x -= width;
@@ -406,12 +451,10 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
 
     for (char c : text)
     {
-        glm::vec2 uv_base = style->font->getGlyphUVOffset(c);
+        glm::vec2 uv_base = 1.0f / (text_size + 2.0f);
 
         glm::vec2 uv_br = uv_base + uv_size;
-        uv_br.y         = 1.0f - uv_br.y;
         glm::vec2 uv_tl = uv_base;
-        uv_tl.y         = 1.0f - uv_tl.y;
 
         glm::vec2 skew = { 0, 0 };
         if (formatting.flags & TEXT_FLAGS_ITALIC) skew.x = glm::round(char_size.x / 2.0f);
@@ -444,8 +487,9 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
             uv_br.x -= subtract_amount_uv;
         }
 
-        updateQuad(tl, tr, bl, br, uv_tl, uv_br, glm::vec4{ colour, 1 },
-            glm::vec4{ 0, static_cast<float>(flags), 0, 0 }, glm::vec4{ char_size, 0, 0 }, temp);
+        updateQuad(tl, tr, bl, br, uv_tl, uv_br, glm::vec4{ colour, 1 }, background_colour,
+            glm::vec4{ 0, char_size, static_cast<float>(c) },
+            glm::vec4{ static_cast<float>(flags), 0, 0, 0 }, temp);
 
         top_left.x += char_size.x + formatting.spacing;
 
@@ -455,7 +499,8 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
 }
 
 void UIRenderer::updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 uv_tl,
-    glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent, BackingDataInternal backing)
+    glm::vec2 uv_br, glm::vec4 colour_1, glm::vec4 colour_2, glm::vec4 data_1, glm::vec4 data_2,
+    BackingDataInternal backing)
 {
     glm::vec3 _p1 = transform * glm::vec3{ p1, 1 };
     glm::vec3 _p2 = transform * glm::vec3{ p2, 1 };
@@ -465,26 +510,22 @@ void UIRenderer::updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 
     // top left
     vertices[backing.first_vertex + 0] = Vertex{
         { _p1.x, _p1.y, 0 },
-        colour, normal, tangent, {},
-        uv_tl
+        colour_1, colour_2, data_1, data_2, uv_tl
     };
     // top right
     vertices[backing.first_vertex + 1] = Vertex{
         { _p2.x, _p2.y, 0 },
-        colour, normal, tangent, {},
-        { uv_br.x, uv_tl.y }
+        colour_1, colour_2, data_1, data_2, { uv_br.x, uv_tl.y }
     };
     // bottom left
     vertices[backing.first_vertex + 2] = Vertex{
         { _p3.x, _p3.y, 0 },
-        colour, normal, tangent, {},
-        { uv_tl.x, uv_br.y }
+        colour_1, colour_2, data_1, data_2, { uv_tl.x, uv_br.y }
     };
     // bottom right
     vertices[backing.first_vertex + 3] = Vertex{
         { _p4.x, _p4.y, 0 },
-        colour, normal, tangent, {},
-        uv_br
+        colour_1, colour_2, data_1, data_2, uv_br
     };
 
     auto& _indices = indices[backing.z];

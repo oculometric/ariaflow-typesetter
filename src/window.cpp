@@ -1,8 +1,9 @@
-#include <window.h>
+#include "window.h"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <glad.h>
+#include <iostream>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -48,17 +49,19 @@ void Window::mouseFunction(GLFWwindow* window, int button, int action, int mods)
 Window::Window()
 {
     if (windows.empty()) glfwInit();
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     window = glfwCreateWindow(1024, 1024, "ariaflow", nullptr, nullptr);
+    makeCurrentContext();
     glfwFocusWindow(window);
     glfwShowWindow(window);
     glfwSetKeyCallback(window, keyFunction);
     glfwSetCharCallback(window, charFunction);
     glfwSetMouseButtonCallback(window, mouseFunction);
-    makeCurrentContext();
+    glfwSwapInterval(1);
     if (windows.empty())
     {
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))

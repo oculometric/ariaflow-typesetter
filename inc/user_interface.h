@@ -68,18 +68,26 @@ private:
     };
 
 private:
-    // TODO: styling, material stuff
-    unsigned int vertex_buffer       = 0;
-    unsigned int index_buffer        = 0;
-    unsigned int vertex_array_object = 0;
-    unsigned int index_count         = 0;
-    unsigned int shader_program      = 0;
-    unsigned int transform_var       = 0;
+    unsigned int vertex_buffer           = 0;
+    unsigned int index_buffer            = 0;
+    unsigned int vertex_array_object     = 0;
+    unsigned int index_count             = 0;
+    unsigned int shader_program          = 0;
+    unsigned int transform_var           = 0;
+    unsigned int text_atlas_texture      = 0;
+    unsigned int text_bold_atlas_texture = 0;
+    unsigned int slice_atlas_texture     = 0;
+    unsigned int icon_atlas_texture      = 0;
+    unsigned int line_atlas_texture      = 0;
+
     std::vector<Vertex> vertices;
-    std::map<float, std::vector<uint16_t>> indices;
+    std::map<float, std::vector<unsigned int>> indices;
     std::map<uint32_t, BackingDataInternal> backing_datas;
     uint32_t next_id    = 0;
     glm::mat3 transform = glm::mat3(1.0);
+
+    glm::vec2 text_size         = { 12, 23 };
+    glm::vec4 background_colour = { 0, 0, 0, 0 };
 
 public:
     UIRenderer();
@@ -89,9 +97,10 @@ public:
     void addQuad(float z, BackingData& backing_ref);
     void addQuad(float z);
     void addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, float z, glm::vec2 uv_tl,
-        glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent, BackingData& backing_ref);
+        glm::vec2 uv_br, glm::vec4 colour_1, glm::vec4 colour_2, glm::vec4 data_1, glm::vec4 data_2,
+        BackingData& backing_ref);
     void addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, float z, glm::vec2 uv_tl,
-        glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent);
+        glm::vec2 uv_br, glm::vec4 colour_1, glm::vec4 colour_2, glm::vec4 data_1, glm::vec4 data_2);
     glm::vec2 addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text,
         glm::vec3 colour, BackingData& backing);
     glm::vec2 addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text,
@@ -115,7 +124,7 @@ private:
     void updateTextSingleLine(glm::vec2 position, TextFormatting formatting, const std::string& text,
         glm::vec3 colour, BackingDataInternal backing);
     void updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 uv_tl,
-        glm::vec2 uv_br, glm::vec4 colour, glm::vec4 normal, glm::vec4 tangent,
+        glm::vec2 uv_br, glm::vec4 colour_1, glm::vec4 colour_2, glm::vec4 data_1, glm::vec4 data_2,
         BackingDataInternal backing);
 };
 

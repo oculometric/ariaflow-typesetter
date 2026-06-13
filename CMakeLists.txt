@@ -11,7 +11,7 @@ project(typesetter)
 
 file(GLOB SRC_FILES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 
-add_executable(ariaflow ${SRC_FILES} ${CMAKE_SOURCE_DIR}/lib/glad.c)
+add_executable(ariaflow ${SRC_FILES} ${CMAKE_SOURCE_DIR}/lib/glad.c ${CMAKE_SOURCE_DIR}/lib/stb_image.cpp)
 target_link_libraries(ariaflow PRIVATE glfw pthread)
 target_include_directories(ariaflow PRIVATE ${CMAKE_SOURCE_DIR}/inc)
 target_include_directories(ariaflow PRIVATE ${CMAKE_SOURCE_DIR}/lib)

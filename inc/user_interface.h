@@ -105,9 +105,9 @@ public:
         glm::vec3 colour, BackingData& backing);
     glm::vec2 addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text,
         glm::vec3 colour);
-    void addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill,
+    void addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill, uint8_t borders,
         BackingData& backing);
-    void addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill);
+    void addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill, uint8_t borders);
     void addSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base,
         glm::vec2 uv_size, BackingData& backing);
     void addSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base,

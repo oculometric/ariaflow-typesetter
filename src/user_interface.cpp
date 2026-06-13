@@ -98,7 +98,7 @@ UIRenderer::UIRenderer()
         glBindTexture(GL_TEXTURE_2D, *texture);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         int x, y, c;
         stbi_uc* pixels = stbi_load_from_memory(data, data_size, &x, &y, &c, 4);
@@ -321,7 +321,7 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
         if (length > longest) longest = length;
     }
 
-    return char_size * glm::vec2{ longest, static_cast<float>(lines.size()) };
+    return glm::vec2{ longest, char_size.y * static_cast<float>(lines.size()) };
 }
 
 glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting formatting,
@@ -331,18 +331,18 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
     return addText(position, z, formatting, text, colour, backing);
 }
 
-void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill,
+void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill, uint8_t borders,
     BackingData& backing_ref)
 {
     addQuad(position, position + glm::vec2{ size.x, 0 }, position + glm::vec2{ 0, size.y }, position + size,
         z, { 0, 0 }, { 1, 1 }, fill, { 1, 1, 1, 1 }, glm::vec4{ 1, size, layer },
-        glm::vec4{ 0b1111, 0, 0, 0 }, backing_ref);
+        glm::vec4{ static_cast<float>(borders), 0, 0, 0 }, backing_ref);
 }
 
-void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill)
+void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill, uint8_t borders)
 {
     BackingData backing;
-    addNineSlice(position, z, size, layer, fill, backing);
+    addNineSlice(position, z, size, layer, fill, borders, backing);
 }
 
 void UIRenderer::addSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base,
@@ -391,7 +391,7 @@ void UIRenderer::draw(Window* window) const
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
 
-    static int scale_factor = 2;
+    static int scale_factor = 1;
     int width               = window->getSize().x;
     int height              = window->getSize().y;
     glViewport(0, 0, width, height);

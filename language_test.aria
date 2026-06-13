@@ -1,0 +1,29 @@
+@DocumentConfig[parameter_1; parameter_2]
+
+This is some plain text. It will be @I{formatted} according to the default formatting defined in the
+@B{DocumentConfig}. I want to make sure that my figure is on the same page as @Marker[id="here"]{this} block of text.
+
+@Figure[name="my-figure"]{
+    @Restrict[arrange=samepage & below; marker="here"]
+    @Embed[source="figure.png"]
+    This is the caption.
+}
+
+@LineBreak // one line height spacing
+
+@PageBreak // move content after this onto the following page
+
+@Format[columns=2, prefer=equal]{
+    This paragraph will be split into two columns.
+    @Embed[source="figure2.png"] // this will be embedded without a figure tag
+    @Code[highlighter=c++]{ // custom highlighters can be defined within the document (or within the environment??)
+        #include <iostream>
+        int main()
+        {
+            std::cout << "Hello, World!" << std::endl;
+            return 0;
+        }
+    }
+}
+
+// blocks like bold, italic, figure, code, can be shortened to @B, @I, @F, @C, etc...

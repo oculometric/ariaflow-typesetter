@@ -1,4 +1,4 @@
-@DocumentConfig[parameter_1; parameter_2]
+@DocumentConfig[figure.captionstyle=italic; font="Courier New"; list.bullet=round] // etc, default format options for various blocks
 
 This is some plain text. It will be @I{formatted} according to the default formatting defined in the
 @B{DocumentConfig}. I want to make sure that my figure is on the same page as @Marker[id="here"]{this} block of text.
@@ -26,4 +26,12 @@ This is some plain text. It will be @I{formatted} according to the default forma
     }
 }
 
+@List[bullet=round]{first item}
+@List[bullet=round]{second item}
+@List[bullet=round]{third item}
+@List[bullet=round]{fourth item}
+
 // blocks like bold, italic, figure, code, can be shortened to @B, @I, @F, @C, etc...
+// formatting options can be overridden within relevant blocks
+// for example, figure caption options can be specified inside the figure block (like [captionstyle=italic & 80%]) or they
+// can be omitted, and the style options from the local formatspace will be used instead (i.e. the document config or the innermost format block)

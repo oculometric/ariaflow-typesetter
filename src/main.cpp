@@ -32,6 +32,23 @@ int main()
     //     r->addSimple({ x, 128 }, 0.0f, { 12, 12 }, i, { 0, 0 }, { 1, 1 });
     // }
 
+    UIMenu* menu = new UIMenu();
+    menu->addButton("new", []() -> void { std::cout << "new" << std:: endl; }, "Ctrl+N");
+    menu->addButton("open...", []() -> void { std::cout << "open" << std:: endl; }, "Ctrl+O");
+    UIMenu* recents = menu->addSubMenu("open recent");
+    menu->addButton("export...", nullptr, "Ctrl+E");
+    menu->addButton("save", nullptr, "Ctrl+S");
+    menu->addButton("save as...", nullptr);
+    menu->addButton("save incremental", nullptr, "Ctrl+Alt+I");
+    menu->addButton("revert", nullptr);
+    menu->addDivider();
+    menu->addButton("exit", []() -> void { exit(1); }, "Alt+F4");
+
+    recents->addButton("item 1", nullptr);
+    recents->addButton("item 2", nullptr);
+    recents->addButton("item 3", nullptr);
+    recents->addButton("item 4", nullptr);
+
     while (!w->shouldClose())
     {
         // TODO: process input
@@ -40,6 +57,10 @@ int main()
         {
             glm::vec2 mouse = w->getMousePosition();
             r->clear();
+
+            menu->draw(r, { 100, 100 });
+
+
             float file_menu_x;
             float edit_menu_x;
             float scripts_menu_x;
@@ -183,6 +204,8 @@ int main()
         r->draw(w);
         w->present();
         w->poll();
+
+        menu->checkInput(w, { 100, 100 });
     }
 
     delete w;

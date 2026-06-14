@@ -1,3 +1,4 @@
+#include <functional>
 #include <glm/glm.hpp>
 #include <map>
 #include <string>
@@ -91,6 +92,10 @@ private:
 
 public:
     UIRenderer();
+    UIRenderer(const UIRenderer& other)     = delete;
+    UIRenderer(UIRenderer&& other)          = delete;
+    void operator=(const UIRenderer& other) = delete;
+    void operator=(UIRenderer&& other)      = delete;
     ~UIRenderer();
 
     void clear();
@@ -105,15 +110,17 @@ public:
         glm::vec3 colour, BackingData& backing);
     glm::vec2 addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text,
         glm::vec3 colour);
-    void addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill, uint8_t borders,
-        BackingData& backing);
-    void addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill, uint8_t borders);
+    void addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill,
+        uint8_t borders, BackingData& backing);
+    void addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill,
+        uint8_t borders);
     void addSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base,
         glm::vec2 uv_size, BackingData& backing);
     void addSimple(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec2 uv_base,
         glm::vec2 uv_size);
     void finalise();
 
+    float calculateTextWidth(const std::string& text, TextFormatting formatting);
     void setTransformation(glm::mat3 transform_matrix) { transform = transform_matrix; }
 
     void draw(Window* window) const;
@@ -126,6 +133,79 @@ private:
     void updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 uv_tl,
         glm::vec2 uv_br, glm::vec4 colour_1, glm::vec4 colour_2, glm::vec4 data_1, glm::vec4 data_2,
         BackingDataInternal backing);
+};
+
+class UIMenu
+{
+private:
+    struct Item
+    {
+        std::string text;
+        std::string shortcut;
+        bool is_clickable = false;
+        bool is_divider   = false;
+        bool is_submenu   = false;
+        std::function<void(void)> callback;
+        UIMenu* submenu = nullptr;
+        int icon        = 0;
+        glm::vec2 position;
+        glm::vec2 size;
+        bool is_clicked = false;
+    };
+
+    std::vector<Item> items;
+    glm::vec2 overall_size;
+
+public:
+    UIMenu();
+    UIMenu(const UIMenu& other)         = delete;
+    UIMenu(UIMenu&& other)              = delete;
+    void operator=(const UIMenu& other) = delete;
+    void operator=(UIMenu&& other)      = delete;
+    ~UIMenu();
+
+    void addButton(const std::string& text, std::function<void(void)> callback,
+        const std::string& shortcut = "", int icon = -1);
+    void addLabel(const std::string& text, int icon = -1);
+    void addDivider();
+    UIMenu* addSubMenu(const std::string& text, int icon = -1);
+
+    void draw(UIRenderer* r, glm::vec2 top_left);
+    bool checkInput(Window* w, glm::vec2 top_left);
+};
+
+class UIRootMenu
+{
+private:
+    struct Item
+    {
+        std::string text;
+        bool is_clickable = false;
+        bool is_submenu   = false;
+        std::function<void(void)> callback;
+        UIMenu* submenu = nullptr;
+        int icon        = 0;
+        glm::vec2 position;
+        glm::vec2 size;
+        bool is_clicked = false;
+    };
+
+    std::vector<Item> items;
+    
+public:
+    UIRootMenu();
+    UIRootMenu(const UIRootMenu& other)     = delete;
+    UIRootMenu(UIRootMenu&& other)          = delete;
+    void operator=(const UIRootMenu& other) = delete;
+    void operator=(UIRootMenu&& other)      = delete;
+    ~UIRootMenu();
+
+    void addButton(const std::string& text, std::function<void> callback, int icon = -1);
+    void addLabel(const std::string& text, int icon = -1);
+    UIMenu* addSubMenu(const std::string& text, int icon = -1);
+
+    void draw(UIRenderer* r, float width);
+    void checkInput(Window* w);
 };
 
 }; // namespace AriaFlow

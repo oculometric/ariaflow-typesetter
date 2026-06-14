@@ -1,7 +1,6 @@
-#include "user_interface.h"
-
 #include "shaders.h"
 #include "textures.h"
+#include "user_interface.h"
 #include "window.h"
 
 #include <cstring>
@@ -176,7 +175,7 @@ void UIRenderer::addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4,
     addQuad(p1, p2, p3, p4, z, uv_tl, uv_br, colour_1, colour_2, data_1, data_2, backing);
 }
 
-float calculateTextWidth(const std::string& text, TextFormatting formatting, glm::vec2 text_size)
+float UIRenderer::calculateTextWidth(const std::string& text, TextFormatting formatting)
 {
     return static_cast<float>(
         (static_cast<int>(text.size()) * (static_cast<int>(text_size.x) + formatting.spacing)) -
@@ -240,7 +239,7 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
                 std::string line = text.substr(newline, (next - newline));
                 if (formatting.clip)
                 {
-                    while (calculateTextWidth(line.substr(0, line.size() - 1), formatting, text_size) >
+                    while (calculateTextWidth(line.substr(0, line.size() - 1), formatting) >
                            formatting.clip_bounds.x)
                         line.pop_back();
                 }
@@ -317,7 +316,7 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
     float longest = 0;
     for (const auto& line : lines)
     {
-        float length = calculateTextWidth(line, formatting, text_size);
+        float length = calculateTextWidth(line, formatting);
         if (length > longest) longest = length;
     }
 
@@ -331,15 +330,16 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
     return addText(position, z, formatting, text, colour, backing);
 }
 
-void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill, uint8_t borders,
-    BackingData& backing_ref)
+void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill,
+    uint8_t borders, BackingData& backing_ref)
 {
     addQuad(position, position + glm::vec2{ size.x, 0 }, position + glm::vec2{ 0, size.y }, position + size,
         z, { 0, 0 }, { 1, 1 }, fill, { 1, 1, 1, 1 }, glm::vec4{ 1, size, layer },
         glm::vec4{ static_cast<float>(borders), 0, 0, 0 }, backing_ref);
 }
 
-void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill, uint8_t borders)
+void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill,
+    uint8_t borders)
 {
     BackingData backing;
     addNineSlice(position, z, size, layer, fill, borders, backing);
@@ -438,7 +438,7 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
 {
     const glm::vec2 uv_size   = text_size / (text_size + 2.0f);
     const glm::vec2 char_size = text_size;
-    const float width         = calculateTextWidth(text, formatting, text_size);
+    const float width         = calculateTextWidth(text, formatting);
 
     glm::vec2 top_left = position;
     if (formatting.align == TEXT_ALIGN_RIGHT) top_left.x -= width;

@@ -109,9 +109,33 @@ unsigned int Window::getCharEvent()
     }
 }
 
+KeyEvent Window::getMouseEvent()
+{
+    if (mouse_events.empty()) return KeyEvent();
+    else
+    {
+        KeyEvent tmp = mouse_events.front();
+        mouse_events.pop();
+        return tmp;
+    }
+}
+
 glm::vec2 Window::getMousePosition() const { return last_mouse_position; }
 
 glm::vec2 Window::getMouseDelta() const { return mouse_delta; }
+
+bool Window::isMouseDown(KeyEvent::Key mouse_button) const
+{
+    int but;
+    switch (mouse_button)
+    {
+    case KeyEvent::MOUSE_LEFT:   but = GLFW_MOUSE_BUTTON_LEFT; break;
+    case KeyEvent::MOUSE_RIGHT:  but = GLFW_MOUSE_BUTTON_RIGHT; break;
+    case KeyEvent::MOUSE_MIDDLE: but = GLFW_MOUSE_BUTTON_MIDDLE; break;
+    default:                     return false;
+    }
+    return glfwGetMouseButton(window, but);
+}
 
 void Window::poll()
 {

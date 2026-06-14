@@ -125,8 +125,10 @@ public:
     glm::u32vec2 getSize() const;
     KeyEvent getKeyEvent();
     unsigned int getCharEvent();
+    KeyEvent getMouseEvent();
     glm::vec2 getMousePosition() const;
     glm::vec2 getMouseDelta() const;
+    bool isMouseDown(KeyEvent::Key mouse_button) const;
     void poll();
     void present() const;
     bool shouldClose() const;

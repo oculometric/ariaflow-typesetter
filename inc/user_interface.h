@@ -44,6 +44,7 @@ struct TextFormatting
     bool clip                 = false;
     glm::ivec2 clip_bounds    = { 0, 0 };
     int spacing               = 0;
+    float size = 24;
 };
 
 class UIRenderer
@@ -87,7 +88,7 @@ private:
     uint32_t next_id    = 0;
     glm::mat3 transform = glm::mat3(1.0);
 
-    glm::vec2 text_size         = { 12, 23 };
+    glm::vec2 text_size         = { 34, 62 };
     glm::vec4 background_colour = { 0, 0, 0, 0 };
 
 public:
@@ -208,6 +209,11 @@ public:
 
     void draw(UIRenderer* r, float width);
     void checkInput(Window* w);
+};
+
+class UIButton
+{
+
 };
 
 }; // namespace AriaFlow

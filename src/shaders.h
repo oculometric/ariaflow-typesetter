@@ -132,7 +132,7 @@ void main()
                 tex_value = 1.0f;
         }
 
-        vec4 target_colour = (tex_value > 0.5f) ? colour_1 : colour_2;
+        vec4 target_colour = (tex_value > 0.2f) ? colour_1 : colour_2;
         if (target_colour.a < 0.5f)
             discard;
         frag_colour = vec4(target_colour.rgb, 1.0f);

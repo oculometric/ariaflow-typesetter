@@ -11,7 +11,7 @@ using namespace AriaFlow;
 const float line_height          = 24.0f;
 const float icon_size            = 24.0f;
 const float spacing              = 2.0f;
-const float text_push            = 1.0f;
+const float text_push            = -2.0f;
 const glm::vec4 panel_colour     = { 0.12f, 0.12f, 0.12f, 1.0f };
 const glm::vec4 panel_sec_colour = { 0.3f, 0.3f, 0.3f, 1.0f };
 const glm::vec3 text_colour      = { 0.9f, 0.9f, 0.9f };
@@ -116,7 +116,7 @@ void UIMenu::draw(UIRenderer* r, glm::vec2 top_left)
             r->addText({ right - (spacing * 4), item.position.y + spacing + text_push }, 19,
                 { TEXT_ALIGN_RIGHT }, item.shortcut, text_sec_colour);
 
-        if (item.is_clicked) r->addNineSlice(item.position, 18, item.size + glm::vec2{ 0, spacing + text_push }, 2, panel_sec_colour, 0b1111);
+        if (item.is_clicked) r->addNineSlice(item.position, 18, item.size + glm::vec2{ 0, spacing + 1.0f }, 2, panel_sec_colour, 0b1111);
         if (item.is_divider)
             r->addNineSlice(item.position + glm::vec2{ (spacing * 4), line_height / 2.0f }, 20,
                 { item.size.x - (spacing * 8), 4 }, 3, panel_sec_colour, 0b0001);

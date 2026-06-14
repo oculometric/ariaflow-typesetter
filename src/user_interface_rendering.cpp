@@ -105,8 +105,8 @@ UIRenderer::UIRenderer()
         stbi_image_free(pixels);
     };
 
-    make_tex(&text_atlas_texture, GL_TEXTURE0, ibm_font, ibm_font_size);
-    make_tex(&text_bold_atlas_texture, GL_TEXTURE1, ibm_font, ibm_font_size);
+    make_tex(&text_atlas_texture, GL_TEXTURE0, roboto_font, roboto_font_size);
+    make_tex(&text_bold_atlas_texture, GL_TEXTURE1, roboto_font_bold, roboto_font_bold_size);
     make_tex(&slice_atlas_texture, GL_TEXTURE2, slices, slices_size);
     make_tex(&icon_atlas_texture, GL_TEXTURE3, icons, icons_size);
     make_tex(&line_atlas_texture, GL_TEXTURE4, icons, icons_size);
@@ -177,8 +177,9 @@ void UIRenderer::addQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4,
 
 float UIRenderer::calculateTextWidth(const std::string& text, TextFormatting formatting)
 {
+    float ratio = formatting.size / text_size.y;
     return static_cast<float>(
-        (static_cast<int>(text.size()) * (static_cast<int>(text_size.x) + formatting.spacing)) -
+        (static_cast<int>(text.size()) * (static_cast<int>(text_size.x * ratio) + formatting.spacing)) -
         formatting.spacing);
 }
 
@@ -220,7 +221,7 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
         backing = backing_datas[backing_ref.id];
     }
 
-    const glm::vec2 char_size = text_size;
+    const glm::vec2 char_size = text_size * (formatting.size / text_size.y);
     size_t allocated_chars    = backing.vertex_count / 4;
     const size_t chars_wide =
         static_cast<size_t>(glm::floor(static_cast<float>(formatting.clip_bounds.x) / char_size.x));
@@ -437,7 +438,7 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
     const std::string& text, glm::vec3 colour, BackingDataInternal backing)
 {
     const glm::vec2 uv_size   = text_size / (text_size + 2.0f);
-    const glm::vec2 char_size = text_size;
+    const glm::vec2 char_size = text_size * (formatting.size / text_size.y);
     const float width         = calculateTextWidth(text, formatting);
 
     glm::vec2 top_left = position;

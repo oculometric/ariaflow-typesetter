@@ -415,3 +415,15 @@ void UILabel::draw(UIRenderer* r, glm::vec2 position)
     if (!message.empty())
         r->addText(pos + glm::vec2{ 0, text_push }, 1, { direction, settings }, message, text_colour);
 }
+
+UIPanel::UIPanel(glm::vec4 fill, int layer, uint8_t borders)
+{
+    fill_colour = fill;
+    layer_index = layer;
+    border_flags = borders;
+}
+
+void AriaFlow::UIPanel::draw(UIRenderer* r, glm::vec2 position, glm::vec2 size)
+{
+    r->addNineSlice(position, 0, size, layer_index, fill_colour, border_flags);
+}

@@ -251,7 +251,23 @@ public:
     ~UILabel() {};
 
     void draw(UIRenderer* r, glm::vec2 position);
-    void checkInput(Window* w, glm::vec2 position) {};
+};
+
+class UIPanel
+{
+private:
+    glm::vec4 fill_colour;
+    int layer_index;
+    uint8_t border_flags;
+public:
+    UIPanel(glm::vec4 fill, int layer, uint8_t borders);
+    UIPanel(const UIPanel& other)        = delete;
+    UIPanel(UIPanel&& other)             = delete;
+    void operator=(const UIPanel& other) = delete;
+    void operator=(UIPanel&& other)      = delete;
+    ~UIPanel() {};
+
+    void draw(UIRenderer* r, glm::vec2 position, glm::vec2 size);
 };
 
 }; // namespace AriaFlow

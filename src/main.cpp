@@ -107,7 +107,10 @@ int main()
     buttons.push_back(new UIButton("", nullptr, 12)); 
     buttons.push_back(new UIButton("", nullptr, 13)); 
     buttons.push_back(new UIButton("", nullptr, 14)); 
-    buttons.push_back(new UIButton("", nullptr, 15)); 
+    buttons.push_back(new UIButton("", nullptr, 15));
+    UIPanel* button_panel = new UIPanel({ 0.4f, 0.4f, 0.4f, 1.0f }, 1, 0b1111);
+
+    glm::vec2 button_start = { 100, 100 };
 
     while (!w->shouldClose())
     {
@@ -125,16 +128,21 @@ int main()
         root_menu->checkInput(w);
         root_menu->draw(r, w->getSize().x);
 
+        button_panel->draw(r, button_start, { buttons[0]->getSize(r).x * 2, 8 });
+        button_start.y += 8;
+
         int col = 0;
         float height = 0;
         for (auto button : buttons)
         {
             glm::vec2 size = button->getSize(r);
-            button->checkInput(w, { size.x * col, height });
-            button->draw(r, { size.x * col, height });
+            button->checkInput(w, button_start + glm::vec2{ size.x * col, height });
+            button->draw(r, button_start + glm::vec2{ size.x * col, height });
             if ((col + 1) % 2 == 0) height += size.y;
             col = (col + 1) % 2;
         }
+
+        button_start.y -= 8;
 
         r->finalise();
     }

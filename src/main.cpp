@@ -91,18 +91,27 @@ int main()
 
     root_menu->addButton("test", []() -> void { std::cout << "test" << std::endl; });
 
-    UIButton* button = new UIButton("test", []() -> void { std::cout << "button" << std::endl; }, 0);
+    std::vector<UIButton*> buttons;
+    buttons.push_back(new UIButton("", nullptr, 0)); 
+    buttons.push_back(new UIButton("", nullptr, 1)); 
+    buttons.push_back(new UIButton("", nullptr, 2)); 
+    buttons.push_back(new UIButton("", nullptr, 3)); 
+    buttons.push_back(new UIButton("", nullptr, 4)); 
+    buttons.push_back(new UIButton("", nullptr, 5)); 
+    buttons.push_back(new UIButton("", nullptr, 6)); 
+    buttons.push_back(new UIButton("", nullptr, 7)); 
+    buttons.push_back(new UIButton("", nullptr, 8)); 
+    buttons.push_back(new UIButton("", nullptr, 9)); 
+    buttons.push_back(new UIButton("", nullptr, 10)); 
+    buttons.push_back(new UIButton("", nullptr, 11)); 
+    buttons.push_back(new UIButton("", nullptr, 12)); 
+    buttons.push_back(new UIButton("", nullptr, 13)); 
+    buttons.push_back(new UIButton("", nullptr, 14)); 
+    buttons.push_back(new UIButton("", nullptr, 15)); 
 
     while (!w->shouldClose())
     {
-        // TODO: process input
-        // TODO: render UI
-        r->clear();
-        root_menu->draw(r, w->getSize().x);
-        button->draw(r, { 100, 100 });
-
-        r->finalise();
-
+        // render
         w->makeCurrentContext();
         glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -110,8 +119,24 @@ int main()
         w->present();
         w->poll();
 
-        button->checkInput(w, { 100, 100 });
+        // build ui and check input
+        r->clear();
+
         root_menu->checkInput(w);
+        root_menu->draw(r, w->getSize().x);
+
+        int col = 0;
+        float height = 0;
+        for (auto button : buttons)
+        {
+            glm::vec2 size = button->getSize(r);
+            button->checkInput(w, { size.x * col, height });
+            button->draw(r, { size.x * col, height });
+            if ((col + 1) % 2 == 0) height += size.y;
+            col = (col + 1) % 2;
+        }
+
+        r->finalise();
     }
 
     delete w;

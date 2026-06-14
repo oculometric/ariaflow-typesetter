@@ -356,7 +356,7 @@ glm::vec2 UIButton::getSize(UIRenderer* r)
     if (icon_index != -1) height = glm::max(height, icon_size + (spacing * 2));
     if (!message.empty()) height = glm::max(height, line_height + (spacing * 2));
 
-    last_size = glm::vec2{ width, height };
+    last_size = glm::vec2{ width + spacing, height };
 
     return last_size;
 }
@@ -370,13 +370,13 @@ void UIButton::draw(UIRenderer* r, glm::vec2 position)
         r->addSimple(pos, 1, { icon_size, icon_size }, icon_index, { 0, 0 }, { 1, 1 });
         pos.x += icon_size + (spacing * 2);
     }
-    if (!message.empty()) r->addText(pos, 1, {}, message, text_colour);
+    if (!message.empty()) r->addText(pos + glm::vec2{ 0, text_push }, 1, {}, message, text_colour);
 }
 
 void UIButton::checkInput(Window* w, glm::vec2 position)
 {
     bool inside = insideRect(w->getMousePosition(), position, last_size);
-    is_pressed = inside && w->isMouseDown(KeyEvent::MOUSE_LEFT);
+    is_pressed  = inside && w->isMouseDown(KeyEvent::MOUSE_LEFT);
     if (inside)
     {
         auto evt = w->getMouseEvent();
@@ -390,4 +390,28 @@ void UIButton::checkInput(Window* w, glm::vec2 position)
             evt = w->getMouseEvent();
         }
     }
+}
+
+UILabel::UILabel(const std::string& text, TextAlign align, TextFlags flags, int icon)
+{
+    message    = text;
+    icon_index = icon;
+    direction  = align;
+    settings   = flags;
+}
+
+void UILabel::draw(UIRenderer* r, glm::vec2 position)
+{
+    glm::vec2 pos = position;
+    if (direction == TEXT_ALIGN_RIGHT) pos -= icon_size;
+    if (icon_index != -1)
+    {
+        r->addSimple(pos, 1, { icon_size, icon_size }, icon_index, { 0, 0 }, { 1, 1 });
+        if (direction == TEXT_ALIGN_RIGHT)
+            pos.x -= (spacing * 2);
+        else
+            pos.x += icon_size + (spacing * 2);
+    }
+    if (!message.empty())
+        r->addText(pos + glm::vec2{ 0, text_push }, 1, { direction, settings }, message, text_colour);
 }

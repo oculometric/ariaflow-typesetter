@@ -44,7 +44,7 @@ struct TextFormatting
     bool clip                 = false;
     glm::ivec2 clip_bounds    = { 0, 0 };
     int spacing               = 0;
-    float size = 24;
+    float size                = 24;
 };
 
 class UIRenderer
@@ -222,8 +222,8 @@ private:
 
 public:
     UIButton(const std::string& text, std::function<void(void)> callback, int icon = -1);
-    UIButton(const UIButton& other)     = delete;
-    UIButton(UIButton&& other)          = delete;
+    UIButton(const UIButton& other)       = delete;
+    UIButton(UIButton&& other)            = delete;
     void operator=(const UIButton& other) = delete;
     void operator=(UIButton&& other)      = delete;
     ~UIButton() {};
@@ -232,6 +232,26 @@ public:
 
     void draw(UIRenderer* r, glm::vec2 position);
     void checkInput(Window* w, glm::vec2 position);
+};
+
+class UILabel
+{
+private:
+    std::string message;
+    int icon_index;
+    TextAlign direction;
+    TextFlags settings;
+
+public:
+    UILabel(const std::string& text, TextAlign align, TextFlags flags, int icon = -1);
+    UILabel(const UILabel& other)        = delete;
+    UILabel(UILabel&& other)             = delete;
+    void operator=(const UILabel& other) = delete;
+    void operator=(UILabel&& other)      = delete;
+    ~UILabel() {};
+
+    void draw(UIRenderer* r, glm::vec2 position);
+    void checkInput(Window* w, glm::vec2 position) {};
 };
 
 }; // namespace AriaFlow

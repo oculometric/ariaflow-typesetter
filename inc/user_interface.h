@@ -213,7 +213,25 @@ public:
 
 class UIButton
 {
+private:
+    std::string message;
+    int icon_index;
+    glm::vec2 last_size;
+    bool is_pressed = false;
+    std::function<void(void)> callback_func;
 
+public:
+    UIButton(const std::string& text, std::function<void(void)> callback, int icon = -1);
+    UIButton(const UIButton& other)     = delete;
+    UIButton(UIButton&& other)          = delete;
+    void operator=(const UIButton& other) = delete;
+    void operator=(UIButton&& other)      = delete;
+    ~UIButton() {};
+
+    glm::vec2 getSize(UIRenderer* r);
+
+    void draw(UIRenderer* r, glm::vec2 position);
+    void checkInput(Window* w, glm::vec2 position);
 };
 
 }; // namespace AriaFlow

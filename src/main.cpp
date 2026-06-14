@@ -12,14 +12,14 @@ int main()
     w->makeCurrentContext();
     UIRenderer* r = new UIRenderer();
 
-    const float line_height = 24.0f;
-    const float icon_size = 24.0f;
-    const float spacing = 2.0f;
-    const float text_push = 3.0f;
-    const glm::vec4 panel_colour = { 0.12f, 0.12f, 0.12f, 1.0f };
+    const float line_height          = 24.0f;
+    const float icon_size            = 24.0f;
+    const float spacing              = 2.0f;
+    const float text_push            = 3.0f;
+    const glm::vec4 panel_colour     = { 0.12f, 0.12f, 0.12f, 1.0f };
     const glm::vec4 panel_sec_colour = { 0.3f, 0.3f, 0.3f, 1.0f };
-    const glm::vec3 text_colour = { 0.9f, 0.9f, 0.9f };
-    const glm::vec3 text_sec_colour = { 0.5f, 0.5f, 0.5f };
+    const glm::vec3 text_colour      = { 0.9f, 0.9f, 0.9f };
+    const glm::vec3 text_sec_colour  = { 0.5f, 0.5f, 0.5f };
 
     // r->addText({ 0, 0 }, 0.0f, {}, "Hello, World!", { 1, 1, 1 });
     // r->addNineSlice({ 36 * 0, 64 }, 0.0f, { 36, 36 }, 0, { 1, 1, 1, 1 });
@@ -36,8 +36,8 @@ int main()
     root_menu->addLabel("", 12);
 
     UIMenu* file_menu = root_menu->addSubMenu("file");
-    file_menu->addButton("new", []() -> void { std::cout << "new" << std:: endl; }, "Ctrl+N");
-    file_menu->addButton("open...", []() -> void { std::cout << "open" << std:: endl; }, "Ctrl+O", 14);
+    file_menu->addButton("new", []() -> void { std::cout << "new" << std::endl; }, "Ctrl+N");
+    file_menu->addButton("open...", []() -> void { std::cout << "open" << std::endl; }, "Ctrl+O", 14);
     UIMenu* recents = file_menu->addSubMenu("open recent");
     recents->addButton("item 1", []() -> void { std::cout << "test" << std::endl; });
     recents->addButton("item 2", nullptr);
@@ -77,15 +77,21 @@ int main()
     UIMenu* help_menu = root_menu->addSubMenu("help");
     help_menu->addButton("about", nullptr);
     help_menu->addDivider();
-    help_menu->addButton("repository", []() -> void {
-        #if defined(_WIN32)
+    help_menu->addButton(
+        "repository",
+        []() -> void
+        {
+#if defined(_WIN32)
             system("start https://github.com/oculometric/typesetter-project");
-        #else
+#else
             system("xdg-open https://github.com/oculometric/typesetter-project");
-        #endif
-    }, "", 13);
+#endif
+        },
+        "", 13);
 
-    root_menu->addButton("test", []() -> void { std::cout << "test" << std:: endl; });
+    root_menu->addButton("test", []() -> void { std::cout << "test" << std::endl; });
+
+    UIButton* button = new UIButton("test", []() -> void { std::cout << "button" << std::endl; }, 0);
 
     while (!w->shouldClose())
     {
@@ -93,6 +99,7 @@ int main()
         // TODO: render UI
         r->clear();
         root_menu->draw(r, w->getSize().x);
+        button->draw(r, { 100, 100 });
 
         r->finalise();
 
@@ -103,6 +110,7 @@ int main()
         w->present();
         w->poll();
 
+        button->checkInput(w, { 100, 100 });
         root_menu->checkInput(w);
     }
 

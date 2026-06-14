@@ -116,7 +116,9 @@ void UIMenu::draw(UIRenderer* r, glm::vec2 top_left)
             r->addText({ right - (spacing * 4), item.position.y + spacing + text_push }, 19,
                 { TEXT_ALIGN_RIGHT }, item.shortcut, text_sec_colour);
 
-        if (item.is_clicked) r->addNineSlice(item.position, 18, item.size + glm::vec2{ 0, spacing + 1.0f }, 2, panel_sec_colour, 0b1111);
+        if (item.is_clicked)
+            r->addNineSlice(item.position, 18, item.size + glm::vec2{ 0, spacing + 1.0f }, 2,
+                panel_sec_colour, 0b1111);
         if (item.is_divider)
             r->addNineSlice(item.position + glm::vec2{ (spacing * 4), line_height / 2.0f }, 20,
                 { item.size.x - (spacing * 8), 4 }, 3, panel_sec_colour, 0b0001);
@@ -333,5 +335,59 @@ void UIRootMenu::checkInput(Window* w)
         }
         else
             release_flag = true;
+    }
+}
+
+UIButton::UIButton(const std::string& text, std::function<void(void)> callback, int icon)
+{
+    message       = text;
+    icon_index    = icon;
+    callback_func = callback;
+}
+
+glm::vec2 UIButton::getSize(UIRenderer* r)
+{
+    float width = 0;
+    if (icon_index != -1) width += icon_size + (spacing * 2);
+    if (!message.empty()) width += r->calculateTextWidth(message, {}) + (spacing * 2);
+    if (width == 0) width = 16;
+
+    float height = 16;
+    if (icon_index != -1) height = glm::max(height, icon_size + (spacing * 2));
+    if (!message.empty()) height = glm::max(height, line_height + (spacing * 2));
+
+    last_size = glm::vec2{ width, height };
+
+    return last_size;
+}
+
+void UIButton::draw(UIRenderer* r, glm::vec2 position)
+{
+    r->addNineSlice(position, 0, getSize(r), is_pressed ? 2 : 0, panel_colour, 0b1111);
+    glm::vec2 pos = position + glm::vec2{ spacing, spacing };
+    if (icon_index != -1)
+    {
+        r->addSimple(pos, 1, { icon_size, icon_size }, icon_index, { 0, 0 }, { 1, 1 });
+        pos.x += icon_size + (spacing * 2);
+    }
+    if (!message.empty()) r->addText(pos, 1, {}, message, text_colour);
+}
+
+void UIButton::checkInput(Window* w, glm::vec2 position)
+{
+    bool inside = insideRect(w->getMousePosition(), position, last_size);
+    is_pressed = inside && w->isMouseDown(KeyEvent::MOUSE_LEFT);
+    if (inside)
+    {
+        auto evt = w->getMouseEvent();
+        while (evt.key != 0)
+        {
+            if (evt.key == KeyEvent::MOUSE_LEFT && evt.pressed == false)
+            {
+                if (callback_func != nullptr) callback_func();
+                break;
+            }
+            evt = w->getMouseEvent();
+        }
     }
 }

@@ -116,7 +116,7 @@ void UIMenu::draw(UIRenderer* r, glm::vec2 top_left)
             r->addText({ right - (spacing * 4), item.position.y + spacing + text_push }, 19,
                 { TEXT_ALIGN_RIGHT }, item.shortcut, text_sec_colour);
 
-        if (item.is_clicked) r->addNineSlice(item.position, 18, item.size, 2, panel_sec_colour, 0b1111);
+        if (item.is_clicked) r->addNineSlice(item.position, 18, item.size + glm::vec2{ 0, spacing + text_push }, 2, panel_sec_colour, 0b1111);
         if (item.is_divider)
             r->addNineSlice(item.position + glm::vec2{ (spacing * 4), line_height / 2.0f }, 20,
                 { item.size.x - (spacing * 8), 4 }, 3, panel_sec_colour, 0b0001);

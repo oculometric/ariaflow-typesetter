@@ -77,7 +77,13 @@ int main()
     UIMenu* help_menu = root_menu->addSubMenu("help");
     help_menu->addButton("about", nullptr);
     help_menu->addDivider();
-    help_menu->addButton("repository", nullptr, "", 13);
+    help_menu->addButton("repository", []() -> void {
+        #if defined(_WIN32)
+            system("start https://github.com/oculometric/typesetter-project");
+        #else
+            system("xdg-open https://github.com/oculometric/typesetter-project");
+        #endif
+    }, "", 13);
 
     root_menu->addButton("test", []() -> void { std::cout << "test" << std:: endl; });
 
@@ -89,7 +95,6 @@ int main()
         root_menu->draw(r, w->getSize().x);
 
         r->finalise();
-
 
         w->makeCurrentContext();
         glClearColor(1.0f, 0.0f, 1.0f, 1.0f);

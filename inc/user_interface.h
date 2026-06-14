@@ -147,7 +147,7 @@ private:
         bool is_submenu   = false;
         std::function<void(void)> callback;
         UIMenu* submenu = nullptr;
-        int icon        = 0;
+        int icon        = -1;
         glm::vec2 position;
         glm::vec2 size;
         bool is_clicked = false;
@@ -184,14 +184,16 @@ private:
         bool is_submenu   = false;
         std::function<void(void)> callback;
         UIMenu* submenu = nullptr;
-        int icon        = 0;
+        int icon        = -1;
         glm::vec2 position;
         glm::vec2 size;
         bool is_clicked = false;
     };
 
     std::vector<Item> items;
-    
+    bool is_menu_open = false;
+    bool release_flag = false;
+
 public:
     UIRootMenu();
     UIRootMenu(const UIRootMenu& other)     = delete;
@@ -200,7 +202,7 @@ public:
     void operator=(UIRootMenu&& other)      = delete;
     ~UIRootMenu();
 
-    void addButton(const std::string& text, std::function<void> callback, int icon = -1);
+    void addButton(const std::string& text, std::function<void(void)> callback, int icon = -1);
     void addLabel(const std::string& text, int icon = -1);
     UIMenu* addSubMenu(const std::string& text, int icon = -1);
 

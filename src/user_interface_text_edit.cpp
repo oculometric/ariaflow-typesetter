@@ -3,8 +3,10 @@
 
 using namespace AriaFlow;
 
-UITextEditor::UITextEditor()
+UITextEditor::UITextEditor(glm::vec2 offset, glm::vec2 dimensions)
 {
+    position      = offset;
+    size          = dimensions;
     grabbables[0] = new UIGrabbable(CURSOR_HAND);
     grabbables[1] = new UIGrabbable(CURSOR_RESIZE_HORIZONTAL);
     grabbables[2] = new UIGrabbable(CURSOR_RESIZE_HORIZONTAL);
@@ -21,20 +23,20 @@ UITextEditor::~UITextEditor()
     for (auto g : grabbables) delete g;
 }
 
-void UITextEditor::draw(UIRenderer* r, glm::vec2 position, glm::vec2 size)
+void UITextEditor::draw(UIRenderer* r)
 {
-    position = glm::round(position);
-    size     = glm::round(size);
-    r->addNineSlice(position, -1, size, 1, panel_colour, 0b1111);
-    glm::vec2 content_position = position + glm::vec2{ 4, 12 };
-    glm::vec2 content_size     = size - glm::vec2{ 4 + 4, 12 + 4 };
+    glm::vec2 panel_position = glm::round(position);
+    glm::vec2 panel_size     = glm::round(size);
+    r->addNineSlice(panel_position, -1, panel_size, 1, panel_colour, 0b1111);
+    glm::vec2 content_position = panel_position + glm::vec2{ 4, 12 };
+    glm::vec2 content_size     = panel_size - glm::vec2{ 4 + 4, 12 + 4 };
     // TEMPORARY
     r->addNineSlice(content_position, -1, content_size, 3, { 0.01f, 0.01f, 0.01f, 1.0f }, 0b1111);
 }
 
 const float editor_min_width = 64;
 
-void UITextEditor::checkInput(Window* w, glm::vec2& position, glm::vec2& size)
+void UITextEditor::checkInput(Window* w)
 {
     {
         glm::vec2 old_window_size = w->getLastSize();
@@ -116,8 +118,7 @@ void UITextEditor::checkInput(Window* w, glm::vec2& position, glm::vec2& size)
         grab_pos          = position + glm::vec2{ 0, size.y - 4 };
         glm::vec2 bl_grab = grabbables[7]->checkInput(w, grab_pos, glm::vec2{ 4, 4 });
         change2           = bl_grab - grab_pos;
-        change2.x =
-            size.x - glm::clamp(size.x - change2.x, editor_min_width, max_size.x);
+        change2.x         = size.x - glm::clamp(size.x - change2.x, editor_min_width, max_size.x);
         change_size += change2 * glm::vec2{ 1, -1 };
         change_position.x += change2.x;
 

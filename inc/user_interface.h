@@ -330,6 +330,10 @@ private:
 
 class UITextEditor
 {
+public:
+    glm::vec2 position;
+    glm::vec2 size;
+
 private:
     std::string text;
     std::vector<std::pair<size_t, size_t>> lines;
@@ -342,7 +346,7 @@ private:
     std::array<UIGrabbable*, 9> grabbables;
 
 public:
-    UITextEditor();
+    UITextEditor(glm::vec2 offset = { 0, 0 }, glm::vec2 dimensions = { 16, 16 });
     UITextEditor(const UITextEditor& other)   = delete;
     UITextEditor(UITextEditor&& other)        = delete;
     void operator=(const UITextEditor& other) = delete;
@@ -358,8 +362,8 @@ public:
         updateCursor();
     }
 
-    void draw(UIRenderer* r, glm::vec2 position, glm::vec2 size);
-    void checkInput(Window* w, glm::vec2& position, glm::vec2& size);
+    void draw(UIRenderer* r);
+    void checkInput(Window* w);
 
 private:
     void updateLines();

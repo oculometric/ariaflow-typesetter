@@ -86,9 +86,11 @@ int main()
     palette->position        = { w->getSize().x - palette->size.x, root_menu->getHeight() };
     for (int i = 0; i < 16; ++i) palette->addButton(i, [i]() { std::cout << i << std::endl; });
 
-    UITextEditor* raw_editor      = new UITextEditor();
-    glm::vec2 raw_editor_top_left = { w->getSize().x / 2.0f, root_menu->getHeight() };
-    glm::vec2 raw_editor_size     = { w->getSize().x / 2.0f, w->getSize().y - raw_editor_top_left.y };
+    UITextEditor* raw_editor = new UITextEditor({ w->getSize().x / 2.0f, root_menu->getHeight() },
+        { w->getSize().x / 2.0f, w->getSize().y - root_menu->getHeight() });
+
+    UITextEditor* preview_editor = new UITextEditor({ 0, root_menu->getHeight() },
+        { w->getSize().x / 2.0f, w->getSize().y - root_menu->getHeight() });
 
     while (!w->shouldClose())
     {
@@ -114,8 +116,11 @@ int main()
         palette->checkInput(w);
         palette->draw(r);
 
-        raw_editor->checkInput(w, raw_editor_top_left, raw_editor_size);
-        raw_editor->draw(r, raw_editor_top_left, raw_editor_size);
+        raw_editor->checkInput(w);
+        raw_editor->draw(r);
+
+        preview_editor->checkInput(w);
+        preview_editor->draw(r);
 
         consumeAllMouseEvents(w);
         r->finalise();

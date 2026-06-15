@@ -297,6 +297,37 @@ public:
     glm::vec2 checkInput(Window* w, glm::vec2 position, glm::vec2 area_size);
 };
 
+class UIButtonPalette
+{
+public:
+    glm::vec2 position;
+    glm::vec2 size;
+
+private:
+    UIPanel* panel;
+    std::array<UIGrabbable*, 3> grabbables;
+    std::vector<UIButton*> buttons;
+    int columns = 2;
+    glm::vec2 button_size;
+
+public:
+    UIButtonPalette();
+    UIButtonPalette(const UIButtonPalette& other) = delete;
+    UIButtonPalette(UIButtonPalette&& other)      = delete;
+    void operator=(const UIButtonPalette& other)  = delete;
+    void operator=(UIButtonPalette&& other)       = delete;
+    ~UIButtonPalette();
+
+    UIButton* addButton(int icon, std::function<void(void)> callback);
+
+    void draw(UIRenderer* r);
+    void checkInput(Window* w);
+
+private:
+    glm::vec2 recalculateSize();
+    glm::vec2 calculateButtonArea();
+};
+
 class UITextEditor
 {
 private:
@@ -339,6 +370,7 @@ bool insideRect(glm::vec2 point, glm::vec2 top_left, glm::vec2 size);
 bool checkForMouseDown(Window* w);
 bool checkForMouseUp(Window* w);
 void consumeAllMouseEvents(Window* w);
+void trackWindowResize(Window* w, glm::vec2& top_left, glm::vec2 size);
 
 const float line_height          = 24.0f;
 const float icon_size            = 24.0f;

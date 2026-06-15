@@ -149,6 +149,7 @@ bool Window::isMouseDown(KeyEvent::Key mouse_button) const
 
 void Window::poll()
 {
+    last_frame_size = getSize();
     glfwPollEvents();
     double mouse_x, mouse_y;
     glfwGetCursorPos(window, &mouse_x, &mouse_y);

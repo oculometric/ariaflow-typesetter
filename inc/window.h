@@ -1,9 +1,9 @@
 #pragma once
 
+#include <array>
 #include <glm/vec2.hpp>
 #include <queue>
 #include <string>
-#include <array>
 
 struct GLFWwindow;
 struct GLFWcursor;
@@ -112,13 +112,13 @@ enum CursorType : uint8_t
     CURSOR_NORMAL,            // regular cursor
     CURSOR_RESIZE_HORIZONTAL, // horizontal resize arrows
     CURSOR_RESIZE_VERTICAL,   // vertical resize arrows
-    CURSOR_RESIZE_TLBR,       
+    CURSOR_RESIZE_TLBR,
     CURSOR_RESIZE_BLTR,
-    CURSOR_TEXT,              // I-beam text cursor
-    CURSOR_CROSSHAIR,         // plus-shaped crosshair
-    CURSOR_HAND,              // grabby hand
-    CURSOR_BUSY,              // loading wheel or sand-timer cursor
-    CURSOR_MAX_ENUM           // invalid cursor type used for iterating the enum
+    CURSOR_TEXT,      // I-beam text cursor
+    CURSOR_CROSSHAIR, // plus-shaped crosshair
+    CURSOR_HAND,      // grabby hand
+    CURSOR_BUSY,      // loading wheel or sand-timer cursor
+    CURSOR_MAX_ENUM   // invalid cursor type used for iterating the enum
 };
 
 class Window
@@ -132,6 +132,7 @@ private:
     glm::vec2 mouse_delta;
     std::array<GLFWcursor*, CURSOR_MAX_ENUM> cursors;
     CursorType current_cursor;
+    glm::vec2 last_frame_size;
 
 public:
     Window();
@@ -143,6 +144,7 @@ public:
 
     void setTitle(const std::string& title);
     glm::u32vec2 getSize() const;
+    glm::u32vec2 getLastSize() const { return last_frame_size; }
     KeyEvent getKeyEvent();
     unsigned int getCharEvent();
     KeyEvent getMouseEvent();

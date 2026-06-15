@@ -46,7 +46,7 @@ int main()
     file_menu->addButton("save incremental", nullptr, "Ctrl+Alt+I", 11);
     file_menu->addButton("revert", nullptr, "", 15);
     file_menu->addDivider();
-    file_menu->addButton("exit", []() -> void { exit(1); }, "Alt+F4");
+    file_menu->addButton("exit", []() -> void { exit(EXIT_FAILURE); }, "Alt+F4");
 
     UIMenu* edit_menu = root_menu->addSubMenu("edit");
     edit_menu->addButton("copy", nullptr, "Ctrl+C");
@@ -116,8 +116,6 @@ int main()
 
         // render
         w->makeCurrentContext();
-        glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
         r->draw(w);
         w->present();
         w->poll();
@@ -134,11 +132,11 @@ int main()
         palette->checkInput(w);
         palette->draw(r);
 
-        raw_editor->checkInput(w);
-        raw_editor->draw(r);
-
         preview_editor->checkInput(w);
         preview_editor->draw(r);
+
+        raw_editor->checkInput(w);
+        raw_editor->draw(r);
 
         consumeAllMouseEvents(w);
         r->finalise();
@@ -146,5 +144,5 @@ int main()
 
     delete w;
 
-    return 0;
+    return EXIT_SUCCESS;
 }

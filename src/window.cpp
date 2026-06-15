@@ -1,9 +1,12 @@
 #include "window.h"
 
 #define GLFW_INCLUDE_NONE
+#include "icon.h"
+
 #include <GLFW/glfw3.h>
 #include <glad.h>
 #include <iostream>
+#include <stb_image.h>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -48,7 +51,14 @@ void Window::mouseFunction(GLFWwindow* window, int button, int action, int mods)
 
 Window::Window()
 {
-    if (windows.empty()) glfwInit();
+    if (windows.empty())
+    {
+#if defined(_WIN32)
+#else
+        glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+#endif
+        glfwInit();
+    }
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -70,6 +80,14 @@ Window::Window()
     cursors[CURSOR_CROSSHAIR]         = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
     cursors[CURSOR_HAND]              = glfwCreateStandardCursor(GLFW_POINTING_HAND_CURSOR);
     cursors[CURSOR_BUSY]              = glfwCreateStandardCursor(GLFW_NOT_ALLOWED_CURSOR);
+
+    GLFWimage image;
+    int img_channels;
+    image.pixels = stbi_load_from_memory(icon, static_cast<int>(icon_size), &image.width, &image.height,
+        &img_channels, STBI_rgb_alpha);
+
+    glfwSetWindowIcon(window, 1, &image);
+    stbi_image_free(image.pixels);
 
     glfwSwapInterval(1);
     if (windows.empty())

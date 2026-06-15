@@ -55,7 +55,10 @@ void AriaFlow::trackWindowResize(Window* w, glm::vec2& top_left, glm::vec2 size)
     glm::vec2 midpoint     = top_left + (size / 2.0f);
     glm::vec2 bottom_right = top_left + size;
 
-    if (midpoint.x > old_window_size.x / 2.0f) top_left.x += (new_window_size - old_window_size).x;
+    if ((glm::abs(midpoint.x - (old_window_size.x / 2.0f)) < (old_window_size.x / 8.0f)) &&
+        !(top_left.x < 100.0f || bottom_right.x > old_window_size.x - 100.0f))
+        top_left.x += (new_window_size - old_window_size).x / 2.0f;
+    else if (midpoint.x > old_window_size.x / 2.0f) top_left.x += (new_window_size - old_window_size).x;
 
     if ((glm::abs(midpoint.y - (old_window_size.y / 2.0f)) < (old_window_size.y / 8.0f)) &&
         !(top_left.y < 100.0f || bottom_right.y > old_window_size.y - 100.0f))

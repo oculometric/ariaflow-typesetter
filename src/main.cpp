@@ -112,16 +112,12 @@ int main()
 
     while (!w->shouldClose())
     {
-        glm::vec2 old_window_size = w->getSize();
-
         // render
         w->makeCurrentContext();
         r->draw(w);
         w->present();
         w->poll();
         w->setCursorType(CURSOR_NORMAL);
-
-        glm::vec2 new_window_size = w->getSize();
 
         // build ui and check input
         r->clear();

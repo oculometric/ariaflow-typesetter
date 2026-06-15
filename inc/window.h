@@ -133,6 +133,7 @@ private:
     std::array<GLFWcursor*, CURSOR_MAX_ENUM> cursors;
     CursorType current_cursor = CURSOR_BUSY;
     glm::vec2 last_frame_size;
+    glm::vec2 current_frame_size;
 
 public:
     Window();
@@ -143,7 +144,7 @@ public:
     ~Window();
 
     void setTitle(const std::string& title);
-    glm::u32vec2 getSize() const;
+    glm::u32vec2 getSize() const { return current_frame_size; }
     glm::u32vec2 getLastSize() const { return last_frame_size; }
     KeyEvent getKeyEvent();
     unsigned int getCharEvent();

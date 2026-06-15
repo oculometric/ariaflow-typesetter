@@ -424,7 +424,7 @@ const glm::vec4 panel_colour     = { 0.12f, 0.12f, 0.12f, 1.0f };
 const glm::vec4 panel_sec_colour = { 0.3f, 0.3f, 0.3f, 1.0f };
 const glm::vec3 text_colour      = { 0.9f, 0.9f, 0.9f };
 const glm::vec3 text_sec_colour  = { 0.5f, 0.5f, 0.5f };
-const float grab_drag_border     = 12.0f;
-const float grab_scale_border    = 4.0f;
+const float medium_border     = 12.0f;
+const float small_border    = 4.0f;
 
 }; // namespace AriaFlow

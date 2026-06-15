@@ -72,9 +72,9 @@ void AriaFlow::trackWindowResizeScaleSize(Window* w, glm::vec2& top_left, glm::v
     auto scaleRelative = [old_window_size, new_window_size](glm::vec2 point) -> glm::vec2
     {
         bool left   = point.x < old_window_size.x / 2.0f;
-        bool center = glm::abs(point.x - (old_window_size.x / 2.0f)) < (old_window_size.x / 4.0f);
+        bool center = glm::abs(point.x - (old_window_size.x / 2.0f)) < (old_window_size.x / 6.0f);
         bool top    = point.y < old_window_size.y / 2.0f;
-        bool middle = glm::abs(point.y - (old_window_size.y / 2.0f)) < (old_window_size.y / 4.0f);
+        bool middle = glm::abs(point.y - (old_window_size.y / 2.0f)) < (old_window_size.y / 6.0f);
         auto pick   = [&](glm::vec2 size) -> glm::vec2
         {
             return { center ? size.x / 2.0f : (left ? 0 : size.x),
@@ -86,6 +86,5 @@ void AriaFlow::trackWindowResizeScaleSize(Window* w, glm::vec2& top_left, glm::v
     };
     top_left     = scaleRelative(top_left);
     bottom_right = scaleRelative(bottom_right);
-    top_left     = top_left;
     size         = bottom_right - top_left;
 }

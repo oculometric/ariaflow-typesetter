@@ -65,6 +65,9 @@ Window::Window()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     window = glfwCreateWindow(1024, 1024, "ariaflow", nullptr, nullptr);
+    int x, y;
+    glfwGetFramebufferSize(window, &x, &y);
+    last_frame_size = current_frame_size = { x, y };
     makeCurrentContext();
     glfwFocusWindow(window);
     glfwShowWindow(window);
@@ -107,13 +110,6 @@ Window::~Window()
 }
 
 void Window::setTitle(const std::string& title) { glfwSetWindowTitle(window, title.c_str()); }
-
-glm::u32vec2 Window::getSize() const
-{
-    int x, y;
-    glfwGetFramebufferSize(window, &x, &y);
-    return { x, y };
-}
 
 KeyEvent Window::getKeyEvent()
 {
@@ -167,8 +163,11 @@ bool Window::isMouseDown(KeyEvent::Key mouse_button) const
 
 void Window::poll()
 {
-    last_frame_size = getSize();
     glfwPollEvents();
+    last_frame_size = current_frame_size;
+    int x, y;
+    glfwGetFramebufferSize(window, &x, &y);
+    current_frame_size = { x, y };
     double mouse_x, mouse_y;
     glfwGetCursorPos(window, &mouse_x, &mouse_y);
     glm::vec2 mouse_position = { mouse_x, mouse_y };

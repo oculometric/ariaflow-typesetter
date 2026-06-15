@@ -34,7 +34,7 @@ void UIButtonPalette::draw(UIRenderer* r)
 {
     glm::vec2 panel_position   = glm::round(position);
     glm::vec2 panel_size       = glm::round(size);
-    glm::vec2 content_position = panel_position + glm::vec2{ 4, 12 };
+    glm::vec2 content_position = panel_position + glm::vec2{ small_border, medium_border };
     glm::vec2 content_size     = glm::round(calculateButtonArea());
     panel->position            = panel_position;
     panel->size                = panel_size;
@@ -55,21 +55,23 @@ void UIButtonPalette::checkInput(Window* w)
 {
     trackWindowResizeFixedSize(w, position, size);
 
-    position = grabbables[0]->checkInput(w, position, { size.x, 12 });
+    position = grabbables[0]->checkInput(w, position, { size.x, medium_border });
 
-    glm::vec2 grab_pos     = position + glm::vec2{ 0, 4 };
-    glm::vec2 palette_left = grabbables[1]->checkInput(w, grab_pos, { 4, size.y - 4 });
-    float change           = palette_left.x - grab_pos.x;
-    change                 = size.x - glm::clamp(size.x - change, button_size.x + 4 + 4,
-                                          static_cast<float>(button_size.x * buttons.size()) + 4 + 4);
+    glm::vec2 grab_pos = position + glm::vec2{ 0, medium_border };
+    glm::vec2 palette_left =
+        grabbables[1]->checkInput(w, grab_pos, { small_border, size.y - (small_border + medium_border) });
+    float change = palette_left.x - grab_pos.x;
+    change       = size.x - glm::clamp(size.x - change, button_size.x + (small_border * 2),
+                                static_cast<float>(button_size.x * buttons.size()) + (small_border * 2));
     position.x += change;
     size.x -= change;
 
-    grab_pos                = position + glm::vec2{ size.x - 4, 4 };
-    glm::vec2 palette_right = grabbables[2]->checkInput(w, grab_pos, { 4, size.y - 4 });
-    change                  = grab_pos.x - palette_right.x;
-    change                  = size.x - glm::clamp(size.x - change, button_size.x + 4 + 4,
-                                           static_cast<float>(button_size.x * buttons.size()) + 4 + 4);
+    grab_pos = position + glm::vec2{ size.x - small_border, medium_border };
+    glm::vec2 palette_right =
+        grabbables[2]->checkInput(w, grab_pos, { small_border, size.y - (small_border + medium_border) });
+    change = grab_pos.x - palette_right.x;
+    change = size.x - glm::clamp(size.x - change, button_size.x + (small_border * 2),
+                          static_cast<float>(button_size.x * buttons.size()) + (small_border * 2));
     size.x -= change;
 
     columns = glm::min(glm::max(1, static_cast<int>(glm::floor(calculateButtonArea().x / button_size.x))),
@@ -83,7 +85,7 @@ void UIButtonPalette::checkInput(Window* w)
 
     glm::vec2 panel_position   = glm::round(position);
     glm::vec2 panel_size       = glm::round(size);
-    glm::vec2 content_position = panel_position + glm::vec2{ 4, 12 };
+    glm::vec2 content_position = panel_position + glm::vec2{ small_border, medium_border };
     glm::vec2 content_size     = glm::round(calculateButtonArea());
 
     int col      = 0;
@@ -99,9 +101,10 @@ void UIButtonPalette::checkInput(Window* w)
 
 glm::vec2 UIButtonPalette::recalculateSize()
 {
-    return { (button_size.x * columns) + 4 + 4,
-        (button_size.y * glm::ceil(static_cast<float>(buttons.size()) / static_cast<float>(columns))) + 12 +
-            4 };
+    return { (button_size.x * columns) + (small_border * 2),
+        (button_size.y * glm::ceil(static_cast<float>(buttons.size()) / static_cast<float>(columns))) +
+            medium_border + small_border };
 }
 
-glm::vec2 UIButtonPalette::calculateButtonArea() { return size - glm::vec2{ 4 + 4, 12 + 4 }; }
+glm::vec2 UIButtonPalette::calculateButtonArea()
+{ return size - glm::vec2{ (small_border * 2), (medium_border + small_border) }; }

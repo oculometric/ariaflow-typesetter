@@ -40,62 +40,67 @@ void UIResizablePanel::checkInput(Window* w)
 {
     trackWindowResizeScaleSize(w, position, size);
 
-    position = grabbables[0]->checkInput(w, position + glm::vec2{ 4, 4 }, glm::vec2{ size.x - 8, 8 }) -
-               glm::vec2{ 4, 4 };
+    position = grabbables[0]->checkInput(w, position + small_border,
+                   glm::vec2{ size.x - (small_border * 2), medium_border }) -
+               small_border;
 
     {
-        glm::vec2 max_size =
-            glm::vec2(10000.0f); // glm::vec2(w->getSize()) - glm::vec2{ 0, UIRootMenu::getHeight() };
+        glm::vec2 max_size = glm::vec2(10000.0f);
+        // glm::vec2(w->getSize()) - glm::vec2{ 0, UIRootMenu::getHeight() };
 
         glm::vec2 change_size     = { 0, 0 };
         glm::vec2 change_position = { 0, 0 };
-        glm::vec2 grab_pos        = position + glm::vec2{ 0, 4 };
-        glm::vec2 left_grab       = grabbables[1]->checkInput(w, grab_pos, glm::vec2{ 4, size.y - 8 });
-        float change              = left_grab.x - grab_pos.x;
-        change                    = size.x - glm::clamp(size.x - change, minimum_size.x, max_size.x);
+        glm::vec2 grab_pos        = position + glm::vec2{ 0, small_border };
+        glm::vec2 left_grab =
+            grabbables[1]->checkInput(w, grab_pos, glm::vec2{ small_border, size.y - (small_border * 2) });
+        float change = left_grab.x - grab_pos.x;
+        change       = size.x - glm::clamp(size.x - change, minimum_size.x, max_size.x);
         change_size.x += change;
         change_position.x += change;
 
-        grab_pos             = position + glm::vec2{ size.x - 4, 4 };
-        glm::vec2 right_grab = grabbables[2]->checkInput(w, grab_pos, glm::vec2{ 4, size.y - 8 });
-        change               = right_grab.x - grab_pos.x;
+        grab_pos = position + glm::vec2{ size.x - small_border, small_border };
+        glm::vec2 right_grab =
+            grabbables[2]->checkInput(w, grab_pos, glm::vec2{ small_border, size.y - (small_border * 2) });
+        change = right_grab.x - grab_pos.x;
         change_size.x -= change;
 
-        grab_pos           = position + glm::vec2{ 4, 0 };
-        glm::vec2 top_grab = grabbables[3]->checkInput(w, grab_pos, glm::vec2{ size.x - 8, 4 });
-        change             = top_grab.y - grab_pos.y;
-        change             = size.y - glm::clamp(size.y - change, minimum_size.y, max_size.y);
+        grab_pos = position + glm::vec2{ small_border, 0 };
+        glm::vec2 top_grab =
+            grabbables[3]->checkInput(w, grab_pos, glm::vec2{ size.x - (small_border * 2), small_border });
+        change = top_grab.y - grab_pos.y;
+        change = size.y - glm::clamp(size.y - change, minimum_size.y, max_size.y);
         change_size.y += change;
         change_position.y += change;
 
-        grab_pos              = position + glm::vec2{ 4, size.y - 4 };
-        glm::vec2 bottom_grab = grabbables[4]->checkInput(w, grab_pos, glm::vec2{ size.x - 8, 4 });
-        change                = bottom_grab.y - grab_pos.y;
+        grab_pos = position + glm::vec2{ small_border, size.y - small_border };
+        glm::vec2 bottom_grab =
+            grabbables[4]->checkInput(w, grab_pos, glm::vec2{ size.x - (small_border * 2), small_border });
+        change = bottom_grab.y - grab_pos.y;
         change_size.y -= change;
 
         grab_pos          = position;
-        glm::vec2 tl_grab = grabbables[5]->checkInput(w, grab_pos, glm::vec2{ 4, 4 });
+        glm::vec2 tl_grab = grabbables[5]->checkInput(w, grab_pos, glm::vec2{ small_border, small_border });
         glm::vec2 change2 = tl_grab - grab_pos;
         change2           = size - glm::clamp(size - change2, minimum_size, max_size);
         change_size += change2;
         change_position += change2;
 
-        grab_pos          = position + glm::vec2{ size.x - 4, 0 };
-        glm::vec2 tr_grab = grabbables[6]->checkInput(w, grab_pos, glm::vec2{ 4, 4 });
+        grab_pos          = position + glm::vec2{ size.x - small_border, 0 };
+        glm::vec2 tr_grab = grabbables[6]->checkInput(w, grab_pos, glm::vec2{ small_border, small_border });
         change2           = tr_grab - grab_pos;
         change2.y         = size.y - glm::clamp(size.y - change2.y, minimum_size.y, max_size.y);
         change_size += change2 * glm::vec2{ -1, 1 };
         change_position.y += change2.y;
 
-        grab_pos          = position + glm::vec2{ 0, size.y - 4 };
-        glm::vec2 bl_grab = grabbables[7]->checkInput(w, grab_pos, glm::vec2{ 4, 4 });
+        grab_pos          = position + glm::vec2{ 0, size.y - small_border };
+        glm::vec2 bl_grab = grabbables[7]->checkInput(w, grab_pos, glm::vec2{ small_border, small_border });
         change2           = bl_grab - grab_pos;
         change2.x         = size.x - glm::clamp(size.x - change2.x, minimum_size.x, max_size.x);
         change_size += change2 * glm::vec2{ 1, -1 };
         change_position.x += change2.x;
 
-        grab_pos          = position + glm::vec2{ size.x - 4, size.y - 4 };
-        glm::vec2 br_grab = grabbables[8]->checkInput(w, grab_pos, glm::vec2{ 4, 4 });
+        grab_pos          = position + glm::vec2{ size.x - small_border, size.y - small_border };
+        glm::vec2 br_grab = grabbables[8]->checkInput(w, grab_pos, glm::vec2{ small_border, small_border });
         change2           = br_grab - grab_pos;
         change_size -= change2;
 
@@ -106,22 +111,13 @@ void UIResizablePanel::checkInput(Window* w)
             glm::vec2(w->getSize()) - 16.0f);
         size     = glm::clamp(size, minimum_size, glm::vec2(10000.0f));
     }
-    // TODO: snapping?
 
-    // if (size != last_checked_size)
-    // {
-    //     last_checked_size = size;
-    //     updateLines();
-    //     updateCursor();
-    // }
+    // TODO: snapping to window when released?
 }
 
 void UIResizablePanel::calculateContentArea(glm::vec2& offset, glm::vec2& dimensions)
 {
-    offset     = glm::round(this->position + glm::vec2{ 4, 12 });
-    dimensions = glm::round(this->size - glm::vec2{ 4 + 4, 12 + 4 });
+    offset     = glm::round(this->position + glm::vec2{ small_border, medium_border + small_border });
+    dimensions = glm::round(
+        this->size - glm::vec2{ small_border + small_border, medium_border + small_border + small_border });
 }
-
-// void UITextEditor::updateLines() {}
-
-// void UITextEditor::updateCursor() {}

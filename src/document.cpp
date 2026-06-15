@@ -160,8 +160,8 @@ std::vector<std::pair<size_t, size_t>> Document::splitToLines(size_t chars_per_l
             continue;
         }
         ++current;
-        continue;
     }
+    lines.emplace_back(line_start, current);
 
     return lines;
     // TODO: split lines

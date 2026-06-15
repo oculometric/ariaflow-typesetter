@@ -393,6 +393,9 @@ private:
     glm::vec2 last_checked_size;
     bool needs_lines_update;
     bool needs_cursor_update;
+    float left_margin = 24.0f;
+    float right_margin = 12.0f;
+    float scroll = 0.0f;
 
 public:
     UITextEditor()                            = default;
@@ -410,6 +413,7 @@ public:
 private:
     void updateLines();
     void updateCursor();
+    float getContentWidth();
 };
 
 bool insideRect(glm::vec2 point, glm::vec2 top_left, glm::vec2 size);

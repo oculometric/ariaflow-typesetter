@@ -40,6 +40,10 @@ int main()
         { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() });
     preview_editor->title            = "rendered view";
 
+    UIButtonPalette* palette = new UIButtonPalette(1);
+    palette->position = { (w->getSize().x - palette->size.x) - 4.0f, UIRootMenu::getHeight() + 4.0f };
+    for (int i = 0; i < 16; ++i) palette->addButton(i, [i]() { std::cout << i << std::endl; });
+
     UIRootMenu* root_menu = new UIRootMenu();
     root_menu->addLabel("", 12);
 
@@ -88,16 +92,17 @@ int main()
     view_menu->addButton("show metrics", nullptr, "Alt+M");
     view_menu->addButton("show guides", nullptr, "Alt+G", 10);
     view_menu->addDivider();
-    UIMenu* view_layouts = view_menu->addSubMenu("reset layout", 15);
-    view_layouts->addButton("side-by-side",
-        [&]()
-        {
-            raw_editor->position = { w->getSize().x / 2.0f, UIRootMenu::getHeight() };
-            raw_editor->size     = { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() };
+    UIMenu* view_layouts  = view_menu->addSubMenu("reset layout", 15);
+    auto setDefaultLayout = [&]() -> void
+    {
+        raw_editor->position = { w->getSize().x / 2.0f, UIRootMenu::getHeight() };
+        raw_editor->size     = { (w->getSize().x / 2.0f) - (palette->size.x + 8.0f),
+            w->getSize().y - UIRootMenu::getHeight() };
 
-            preview_editor->position = { 0, UIRootMenu::getHeight() };
-            preview_editor->size     = { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() };
-        });
+        preview_editor->position = { 0, UIRootMenu::getHeight() };
+        preview_editor->size     = { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() };
+    };
+    view_layouts->addButton("side-by-side", setDefaultLayout);
     view_layouts->addButton("top-to-bottom",
         [&]()
         {
@@ -125,9 +130,7 @@ int main()
 
     root_menu->addButton("test", []() -> void { std::cout << "test" << std::endl; });
 
-    UIButtonPalette* palette = new UIButtonPalette(1);
-    palette->position = { (w->getSize().x - palette->size.x) - 16.0f, root_menu->getHeight() + 16.0f };
-    for (int i = 0; i < 16; ++i) palette->addButton(i, [i]() { std::cout << i << std::endl; });
+    setDefaultLayout();
 
     while (!w->shouldClose())
     {

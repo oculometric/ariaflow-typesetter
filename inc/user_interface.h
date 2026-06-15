@@ -1,3 +1,7 @@
+#pragma once
+
+#include "window.h"
+
 #include <functional>
 #include <glm/glm.hpp>
 #include <map>
@@ -207,7 +211,7 @@ public:
     void addLabel(const std::string& text, int icon = -1);
     UIMenu* addSubMenu(const std::string& text, int icon = -1);
 
-    float getHeight() const;
+    static float getHeight();
 
     void draw(UIRenderer* r, float width);
     void checkInput(Window* w);
@@ -278,9 +282,10 @@ class UIGrabbable
 {
 private:
     bool grabbed;
+    CursorType cursor;
 
 public:
-    UIGrabbable();
+    UIGrabbable(CursorType cursor_indicator = CURSOR_NORMAL);
     UIGrabbable(const UIGrabbable& other)    = delete;
     UIGrabbable(UIGrabbable&& other)         = delete;
     void operator=(const UIGrabbable& other) = delete;
@@ -292,9 +297,56 @@ public:
     glm::vec2 checkInput(Window* w, glm::vec2 position, glm::vec2 area_size);
 };
 
+class UITextEditor
+{
+private:
+    std::string text;
+    std::vector<std::pair<size_t, size_t>> lines;
+    size_t cursor_index  = 0;
+    size_t cursor_line   = 0;
+    size_t cursor_column = 0;
+    glm::vec2 last_checked_size;
+    bool needs_lines_update;
+    bool needs_cursor_update;
+    std::array<UIGrabbable*, 9> grabbables;
+
+public:
+    UITextEditor();
+    UITextEditor(const UITextEditor& other)   = delete;
+    UITextEditor(UITextEditor&& other)        = delete;
+    void operator=(const UITextEditor& other) = delete;
+    void operator=(UITextEditor&& other)      = delete;
+    ~UITextEditor();
+
+    glm::ivec2 getCursorPos() const { return { cursor_line + 1, cursor_column + 1 }; }
+    std::string getContent() const { return text; }
+    void setContent(const std::string& content, size_t cursor_index)
+    {
+        text = content;
+        updateLines();
+        updateCursor();
+    }
+
+    void draw(UIRenderer* r, glm::vec2 position, glm::vec2 size);
+    void checkInput(Window* w, glm::vec2& position, glm::vec2& size);
+
+private:
+    void updateLines();
+    void updateCursor();
+};
+
 bool insideRect(glm::vec2 point, glm::vec2 top_left, glm::vec2 size);
 bool checkForMouseDown(Window* w);
 bool checkForMouseUp(Window* w);
 void consumeAllMouseEvents(Window* w);
+
+const float line_height          = 24.0f;
+const float icon_size            = 24.0f;
+const float spacing              = 2.0f;
+const float text_push            = -2.0f;
+const glm::vec4 panel_colour     = { 0.12f, 0.12f, 0.12f, 1.0f };
+const glm::vec4 panel_sec_colour = { 0.3f, 0.3f, 0.3f, 1.0f };
+const glm::vec3 text_colour      = { 0.9f, 0.9f, 0.9f };
+const glm::vec3 text_sec_colour  = { 0.5f, 0.5f, 0.5f };
 
 }; // namespace AriaFlow

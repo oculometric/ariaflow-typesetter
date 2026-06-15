@@ -61,6 +61,16 @@ Window::Window()
     glfwSetKeyCallback(window, keyFunction);
     glfwSetCharCallback(window, charFunction);
     glfwSetMouseButtonCallback(window, mouseFunction);
+    cursors[CURSOR_NORMAL]            = nullptr;
+    cursors[CURSOR_RESIZE_HORIZONTAL] = glfwCreateStandardCursor(GLFW_RESIZE_EW_CURSOR);
+    cursors[CURSOR_RESIZE_VERTICAL]   = glfwCreateStandardCursor(GLFW_RESIZE_NS_CURSOR);
+    cursors[CURSOR_RESIZE_TLBR]       = glfwCreateStandardCursor(GLFW_RESIZE_NWSE_CURSOR);
+    cursors[CURSOR_RESIZE_BLTR]       = glfwCreateStandardCursor(GLFW_RESIZE_NESW_CURSOR);
+    cursors[CURSOR_TEXT]              = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+    cursors[CURSOR_CROSSHAIR]         = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+    cursors[CURSOR_HAND]              = glfwCreateStandardCursor(GLFW_POINTING_HAND_CURSOR);
+    cursors[CURSOR_BUSY]              = glfwCreateStandardCursor(GLFW_NOT_ALLOWED_CURSOR);
+
     glfwSwapInterval(1);
     if (windows.empty())
     {
@@ -147,7 +157,11 @@ void Window::poll()
     last_mouse_position      = mouse_position;
 }
 
-void Window::present() const { glfwSwapBuffers(window); }
+void Window::present() const
+{
+    glfwSetCursor(window, cursors[current_cursor]);
+    glfwSwapBuffers(window);
+}
 
 bool Window::shouldClose() const { return glfwWindowShouldClose(window); }
 

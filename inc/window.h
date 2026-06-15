@@ -1,8 +1,12 @@
+#pragma once
+
 #include <glm/vec2.hpp>
 #include <queue>
 #include <string>
+#include <array>
 
 struct GLFWwindow;
+struct GLFWcursor;
 
 namespace AriaFlow
 {
@@ -103,6 +107,20 @@ struct KeyEvent
     Modifier modifiers = NONE;
 };
 
+enum CursorType : uint8_t
+{
+    CURSOR_NORMAL,            // regular cursor
+    CURSOR_RESIZE_HORIZONTAL, // horizontal resize arrows
+    CURSOR_RESIZE_VERTICAL,   // vertical resize arrows
+    CURSOR_RESIZE_TLBR,       
+    CURSOR_RESIZE_BLTR,
+    CURSOR_TEXT,              // I-beam text cursor
+    CURSOR_CROSSHAIR,         // plus-shaped crosshair
+    CURSOR_HAND,              // grabby hand
+    CURSOR_BUSY,              // loading wheel or sand-timer cursor
+    CURSOR_MAX_ENUM           // invalid cursor type used for iterating the enum
+};
+
 class Window
 {
 private:
@@ -112,6 +130,8 @@ private:
     std::queue<KeyEvent> mouse_events;
     glm::vec2 last_mouse_position;
     glm::vec2 mouse_delta;
+    std::array<GLFWcursor*, CURSOR_MAX_ENUM> cursors;
+    CursorType current_cursor;
 
 public:
     Window();
@@ -133,6 +153,8 @@ public:
     void present() const;
     bool shouldClose() const;
     void makeCurrentContext() const;
+
+    void setCursorType(CursorType t) { current_cursor = t; }
 
 private:
     static void keyFunction(GLFWwindow* window, int key, int scancode, int action, int mods);

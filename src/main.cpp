@@ -12,15 +12,6 @@ int main()
     w->makeCurrentContext();
     UIRenderer* r = new UIRenderer();
 
-    const float line_height          = 24.0f;
-    const float icon_size            = 24.0f;
-    const float spacing              = 2.0f;
-    const float text_push            = 3.0f;
-    const glm::vec4 panel_colour     = { 0.12f, 0.12f, 0.12f, 1.0f };
-    const glm::vec4 panel_sec_colour = { 0.3f, 0.3f, 0.3f, 1.0f };
-    const glm::vec3 text_colour      = { 0.9f, 0.9f, 0.9f };
-    const glm::vec3 text_sec_colour  = { 0.5f, 0.5f, 0.5f };
-
     // r->addText({ 0, 0 }, 0.0f, {}, "Hello, World!", { 1, 1, 1 });
     // r->addNineSlice({ 36 * 0, 64 }, 0.0f, { 36, 36 }, 0, { 1, 1, 1, 1 });
     // r->addNineSlice({ 36 * 1, 64 }, 0.0f, { 36, 36 }, 1, { 1, 1, 1, 1 });
@@ -91,8 +82,9 @@ int main()
 
     root_menu->addButton("test", []() -> void { std::cout << "test" << std::endl; });
 
+    // TODO: make 'buttonpanel' a thing
     std::vector<UIButton*> buttons;
-    buttons.push_back(new UIButton("", [](){ std::cout << "hi" << std::endl;}, 0));
+    buttons.push_back(new UIButton("", []() { std::cout << "hi" << std::endl; }, 0));
     buttons.push_back(new UIButton("", nullptr, 1));
     buttons.push_back(new UIButton("", nullptr, 2));
     buttons.push_back(new UIButton("", nullptr, 3));
@@ -115,9 +107,13 @@ int main()
         (button_size.y *
             glm::ceil(static_cast<float>(buttons.size()) / static_cast<float>(palette_columns))) };
     glm::vec2 palette_top_left     = { w->getSize().x - (palette_size.x + 16), root_menu->getHeight() + 8 };
-    UIGrabbable* palette_grabbale  = new UIGrabbable();
-    UIGrabbable* palette_left_grab = new UIGrabbable();
-    UIGrabbable* palette_right_grab = new UIGrabbable();
+    UIGrabbable* palette_grabbale  = new UIGrabbable(CURSOR_HAND);
+    UIGrabbable* palette_left_grab = new UIGrabbable(CURSOR_RESIZE_HORIZONTAL);
+    UIGrabbable* palette_right_grab = new UIGrabbable(CURSOR_RESIZE_HORIZONTAL);
+
+    UITextEditor* raw_editor      = new UITextEditor();
+    glm::vec2 raw_editor_top_left = { w->getSize().x / 2.0f, root_menu->getHeight() };
+    glm::vec2 raw_editor_size     = { w->getSize().x / 2.0f, w->getSize().y - raw_editor_top_left.y };
 
     while (!w->shouldClose())
     {
@@ -130,6 +126,7 @@ int main()
         r->draw(w);
         w->present();
         w->poll();
+        w->setCursorType(CURSOR_NORMAL);
 
         glm::vec2 new_window_size = w->getSize();
 
@@ -155,6 +152,7 @@ int main()
 
             palette_top_left = palette_grabbale->checkInput(w, palette_top_left, { palette_size.x, 12 });
 
+            // TODO: fix overlapping left/right grab and top grab
             glm::vec2 palette_left =
                 palette_left_grab->checkInput(w, palette_top_left, { 4, palette_size.y });
             float size_change = palette_left.x - palette_top_left.x;
@@ -162,7 +160,7 @@ int main()
             palette_size.x -= size_change;
             glm::vec2 palette_right = palette_right_grab->checkInput(w,
                 palette_top_left + glm::vec2{ palette_size.x + 4, 0 }, { 4, palette_size.y });
-            size_change = palette_right.x - (palette_top_left.x + palette_size.x + 4);
+            size_change             = palette_right.x - (palette_top_left.x + palette_size.x + 4);
             palette_size.x += size_change;
             palette_columns =
                 glm::min(glm::max(1, static_cast<int>(glm::floor(palette_size.x / button_size.x))),
@@ -178,7 +176,8 @@ int main()
                 new_window_size - glm::vec2{ palette_size.x + 8, palette_size.y + 12 + 4 });
 
             glm::vec2 temp = glm::round(palette_top_left);
-            button_panel->draw(r, temp, glm::round(glm::vec2{ palette_size.x + 8, palette_size.y + 12 + 4 }));
+            button_panel->draw(r, temp,
+                glm::round(glm::vec2{ palette_size.x + 8, palette_size.y + 12 + 4 }));
             temp.y += 12;
             temp.x += 4;
 
@@ -192,6 +191,9 @@ int main()
                 col = (col + 1) % palette_columns;
             }
         }
+
+        raw_editor->checkInput(w, raw_editor_top_left, raw_editor_size);
+        raw_editor->draw(r, raw_editor_top_left, raw_editor_size);
 
         consumeAllMouseEvents(w);
         r->finalise();

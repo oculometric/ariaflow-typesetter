@@ -1,21 +1,7 @@
 #include "user_interface.h"
 #include "window.h"
 
-#include <cstring>
-#include <glad.h>
-#include <stb_image.h>
-#include <stdexcept>
-
 using namespace AriaFlow;
-
-const float line_height          = 24.0f;
-const float icon_size            = 24.0f;
-const float spacing              = 2.0f;
-const float text_push            = -2.0f;
-const glm::vec4 panel_colour     = { 0.12f, 0.12f, 0.12f, 1.0f };
-const glm::vec4 panel_sec_colour = { 0.3f, 0.3f, 0.3f, 1.0f };
-const glm::vec3 text_colour      = { 0.9f, 0.9f, 0.9f };
-const glm::vec3 text_sec_colour  = { 0.5f, 0.5f, 0.5f };
 
 UIMenu::UIMenu() { overall_size = { 16, spacing * 2 }; }
 
@@ -249,7 +235,7 @@ UIMenu* UIRootMenu::addSubMenu(const std::string& text, int icon)
     return menu;
 }
 
-float UIRootMenu::getHeight() const { return line_height + (spacing * 2); }
+float UIRootMenu::getHeight() { return line_height + (spacing * 2); }
 
 void UIRootMenu::draw(UIRenderer* r, float width)
 {
@@ -432,11 +418,16 @@ UIPanel::UIPanel(glm::vec4 fill, int layer, uint8_t borders)
 void UIPanel::draw(UIRenderer* r, glm::vec2 position, glm::vec2 size)
 { r->addNineSlice(position, 0, size, layer_index, fill_colour, border_flags); }
 
-UIGrabbable::UIGrabbable() { grabbed = false; }
+UIGrabbable::UIGrabbable(CursorType cursor_indicator)
+{
+    grabbed = false;
+    cursor  = cursor_indicator;
+}
 
 glm::vec2 UIGrabbable::checkInput(Window* w, glm::vec2 position, glm::vec2 area_size)
 {
-    if (insideRect(w->getMousePosition(), position, area_size) && !grabbed)
+    bool inside = insideRect(w->getMousePosition(), position, area_size);
+    if (inside && !grabbed)
     {
         if (checkForMouseDown(w)) grabbed = true;
     }
@@ -447,6 +438,8 @@ glm::vec2 UIGrabbable::checkInput(Window* w, glm::vec2 position, glm::vec2 area_
 
         if (!w->isMouseDown(KeyEvent::MOUSE_LEFT)) grabbed = false;
     }
+
+    if (inside || grabbed) w->setCursorType(cursor);
 
     return position;
 }

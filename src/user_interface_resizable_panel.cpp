@@ -40,11 +40,14 @@ void UIResizablePanel::draw(UIRenderer* r)
     r->addText(panel_position + glm::vec2{ panel_size.x / 2.0f, text_push + small_border + 0.5f }, z,
         format, title, text_colour);
 
+    r->addNineSlice({ panel_position.x + (spacing * 4), content_position.y - 2 }, z,
+        { content_size.x - (spacing * 8), 2 }, 3, panel_sec_colour, 0b0001);
+
     if (child)
     {
         child->size     = content_size;
         child->position = content_position;
-        child->z = z + 1.0f;
+        child->z        = z + 1.0f;
         child->draw(r);
     }
     else

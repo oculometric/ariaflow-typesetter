@@ -14,6 +14,12 @@ void UITextEditor::draw(UIRenderer* _r)
     size_t line_index      = 1;
     for (const auto& line : lines)
     {
+        if (p.y <= position.y)
+        {
+            p.y += line_height;
+            ++line_index;
+            continue;
+        }
         custom_r->addText(p - glm::vec2{ (spacing * 2), 0 }, z, format2, std::to_string(line_index),
             text_sec_colour);
         custom_r->addText(p, z, format, data_source->getData().substr(line.first, line.second - line.first),
@@ -37,13 +43,14 @@ void UITextEditor::checkInput(Window* w)
         auto evt = w->getCharEvent();
         while (evt != 0)
         {
-            if (evt == 'P')
-                scroll += 8.0f;
+            if (evt == 'P') scroll += 8.0f;
             else if (evt == 'O')
                 scroll -= 8.0f;
             evt = w->getCharEvent();
         }
     }
+    float lines_tall = size.y / line_height;
+    scroll = glm::clamp(scroll, 0.0f, line_height * glm::max(static_cast<float>(lines.size()) - glm::max(lines_tall - 8.0f, 1.0f), 0.0f));
     // TODO: text editor input handling (big)
     // TODO: keyboard navigation, mouse navigation, key inputs, selection
 }

@@ -7,11 +7,13 @@ const TextFormatting format{ TEXT_ALIGN_LEFT, TEXT_FLAGS_NONE, true, false, fals
 
 void UITextEditor::draw(UIRenderer* _r)
 {
-    TextFormatting format2 = format;
-    format2.align          = TEXT_ALIGN_RIGHT;
-    format2.size           = 12.5f;
-    glm::vec2 p            = position + glm::vec2{ left_margin, (spacing * 2) - scroll };
-    size_t line_index      = 1;
+    TextFormatting format2     = format;
+    format2.align              = TEXT_ALIGN_RIGHT;
+    format2.size               = 12.5f;
+    const glm::vec2 text_start = position + glm::vec2{ left_margin, (spacing * 2) - scroll };
+
+    glm::vec2 p       = text_start;
+    size_t line_index = 1;
     for (const auto& line : lines)
     {
         if (p.y >= position.y + size.y) break;
@@ -34,6 +36,16 @@ void UITextEditor::draw(UIRenderer* _r)
         p.y += line_height;
         ++line_index;
     }
+
+    size_t line_length = 0;
+    if (cursor_line < lines.size()) line_length = lines[cursor_line].second - lines[cursor_line].first;
+    size_t effective_cursor_column = glm::min(line_length, cursor_column);
+    float char_width               = custom_r->calculateTextWidth("a", format);
+    glm::vec2 cursor_offset =
+        glm::vec2{ static_cast<float>(effective_cursor_column) * (char_width + format.spacing),
+            static_cast<float>(cursor_line) * line_height };
+    custom_r->addNineSlice(text_start + cursor_offset - glm::vec2{ 1, (spacing * 2) }, z + 0.1f,
+        { 2, line_height + (spacing * 2.0f) }, 0, glm::vec4{ text_colour, 1 }, 0b0000);
 }
 
 void UITextEditor::checkInput(Window* w)
@@ -54,6 +66,58 @@ void UITextEditor::checkInput(Window* w)
             else if (evt == 'O')
                 scroll -= 8.0f;
             evt = w->getCharEvent();
+        }
+
+        auto evt2 = w->getKeyEvent();
+        while (evt2.key != 0)
+        {
+            if (evt2.pressed && evt2.key == KeyEvent::KEY_DOWN)
+            {
+                cursor_line = glm::min(cursor_line + 1, lines.size());
+            }
+            if (evt2.pressed && evt2.key == KeyEvent::KEY_UP)
+            {
+                if (cursor_line > 0) --cursor_line;
+            }
+            if (evt2.pressed && evt2.key == KeyEvent::KEY_RIGHT)
+            {
+                size_t line_length = 0;
+                if (cursor_line < lines.size())
+                    line_length = lines[cursor_line].second - lines[cursor_line].first;
+                size_t effective_cursor_column = glm::min(line_length, cursor_column);
+                if (effective_cursor_column == line_length)
+                {
+                    if (cursor_line < lines.size())
+                    {
+                        ++cursor_line;
+                        cursor_column = 0;
+                    }
+                    else
+                        cursor_column = effective_cursor_column;
+                }
+                else
+                    ++cursor_column;
+            }
+            if (evt2.pressed && evt2.key == KeyEvent::KEY_LEFT)
+            {
+                size_t line_length = 0;
+                if (cursor_line < lines.size())
+                    line_length = lines[cursor_line].second - lines[cursor_line].first;
+                size_t effective_cursor_column = glm::min(line_length, cursor_column);
+                if (effective_cursor_column == 0)
+                {
+                    if (cursor_line > 0)
+                    {
+                        --cursor_line;
+                        cursor_column = lines[cursor_line].second - lines[cursor_line].first;
+                    }
+                    else
+                        cursor_column = effective_cursor_column;
+                }
+                else
+                    cursor_column = effective_cursor_column - 1;
+            }
+            evt2 = w->getKeyEvent();
         }
     }
     float lines_tall = size.y / line_height;

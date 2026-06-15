@@ -207,6 +207,8 @@ public:
     void addLabel(const std::string& text, int icon = -1);
     UIMenu* addSubMenu(const std::string& text, int icon = -1);
 
+    float getHeight() const;
+
     void draw(UIRenderer* r, float width);
     void checkInput(Window* w);
 };
@@ -219,6 +221,7 @@ private:
     glm::vec2 last_size;
     bool is_pressed = false;
     std::function<void(void)> callback_func;
+    bool mouse_inside = false;
 
 public:
     UIButton(const std::string& text, std::function<void(void)> callback, int icon = -1);
@@ -259,6 +262,7 @@ private:
     glm::vec4 fill_colour;
     int layer_index;
     uint8_t border_flags;
+
 public:
     UIPanel(glm::vec4 fill, int layer, uint8_t borders);
     UIPanel(const UIPanel& other)        = delete;
@@ -269,5 +273,28 @@ public:
 
     void draw(UIRenderer* r, glm::vec2 position, glm::vec2 size);
 };
+
+class UIGrabbable
+{
+private:
+    bool grabbed;
+
+public:
+    UIGrabbable();
+    UIGrabbable(const UIGrabbable& other)    = delete;
+    UIGrabbable(UIGrabbable&& other)         = delete;
+    void operator=(const UIGrabbable& other) = delete;
+    void operator=(UIGrabbable&& other)      = delete;
+    ~UIGrabbable() {};
+
+    bool isCurrentlyGrabbed() const { return grabbed; }
+
+    glm::vec2 checkInput(Window* w, glm::vec2 position, glm::vec2 area_size);
+};
+
+bool insideRect(glm::vec2 point, glm::vec2 top_left, glm::vec2 size);
+bool checkForMouseDown(Window* w);
+bool checkForMouseUp(Window* w);
+void consumeAllMouseEvents(Window* w);
 
 }; // namespace AriaFlow

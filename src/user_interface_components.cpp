@@ -132,7 +132,7 @@ void UIMenu::draw(UIRenderer* r, glm::vec2 top_left)
     r->addNineSlice(top_left, 15, size, 0, panel_colour, 0b1111);
 }
 
-bool insideRect(glm::vec2 point, glm::vec2 top_left, glm::vec2 size)
+bool AriaFlow::insideRect(glm::vec2 point, glm::vec2 top_left, glm::vec2 size)
 {
     if (point.x < top_left.x) return false;
     if (point.y < top_left.y) return false;
@@ -140,6 +140,34 @@ bool insideRect(glm::vec2 point, glm::vec2 top_left, glm::vec2 size)
     if (point.y >= top_left.y + size.y) return false;
 
     return true;
+}
+
+bool AriaFlow::checkForMouseDown(Window* w)
+{
+    auto evt = w->getMouseEvent();
+    while (evt.key != 0)
+    {
+        if (evt.key == KeyEvent::MOUSE_LEFT && evt.pressed == true) { return true; }
+        evt = w->getMouseEvent();
+    }
+    return false;
+}
+
+bool AriaFlow::checkForMouseUp(Window* w)
+{
+    auto evt = w->getMouseEvent();
+    while (evt.key != 0)
+    {
+        if (evt.key == KeyEvent::MOUSE_LEFT && evt.pressed == false) { return true; }
+        evt = w->getMouseEvent();
+    }
+    return false;
+}
+
+void AriaFlow::consumeAllMouseEvents(Window* w)
+{
+    auto evt = w->getMouseEvent();
+    while (evt.key != 0) evt = w->getMouseEvent();
 }
 
 bool UIMenu::checkInput(Window* w, glm::vec2 top_left)
@@ -166,16 +194,10 @@ bool UIMenu::checkInput(Window* w, glm::vec2 top_left)
             item.is_clicked = (mouse_inside && down);
             if (mouse_inside)
             {
-                auto evt = w->getMouseEvent();
-                while (evt.key != 0)
+                if (checkForMouseUp(w))
                 {
-                    if (evt.key == KeyEvent::MOUSE_LEFT && evt.pressed == false)
-                    {
-                        if (item.callback != nullptr) item.callback();
-                        inside_menu = false;
-                        break;
-                    }
-                    evt = w->getMouseEvent();
+                    if (item.callback != nullptr) item.callback();
+                    inside_menu = false;
                 }
             }
         }
@@ -227,9 +249,11 @@ UIMenu* UIRootMenu::addSubMenu(const std::string& text, int icon)
     return menu;
 }
 
+float UIRootMenu::getHeight() const { return line_height + (spacing * 2); }
+
 void UIRootMenu::draw(UIRenderer* r, float width)
 {
-    float bottom = line_height + (spacing * 2);
+    float bottom = getHeight();
     r->addNineSlice({ 0, 0 }, 16, { width, bottom }, 0, panel_colour, 0b0010);
     float left = spacing;
     float top  = spacing;
@@ -258,20 +282,23 @@ void UIRootMenu::draw(UIRenderer* r, float width)
 
 void UIRootMenu::checkInput(Window* w)
 {
-    float bottom     = line_height + (spacing * 2);
+    float bottom     = getHeight();
     glm::vec2 mouse  = w->getMousePosition();
     bool down        = w->isMouseDown(KeyEvent::MOUSE_LEFT);
     bool inside_menu = insideRect(mouse, { 0, 0 }, { 100000, bottom });
 
     if (!is_menu_open)
     {
-        if (down) is_menu_open = true;
+        if (inside_menu && checkForMouseDown(w))
+        {
+            is_menu_open = true;
+            consumeAllMouseEvents(w);
+        }
         else
         {
             for (auto& item : items) item.is_clicked = false;
         }
-        auto evt = w->getMouseEvent();
-        while (evt.key != 0) evt = w->getMouseEvent();
+
         return;
     }
 
@@ -293,33 +320,18 @@ void UIRootMenu::checkInput(Window* w)
             item.is_clicked = (mouse_inside && down);
             if (mouse_inside)
             {
-                auto evt = w->getMouseEvent();
-                while (evt.key != 0)
+                if (checkForMouseUp(w))
                 {
-                    if (evt.key == KeyEvent::MOUSE_LEFT && evt.pressed == false)
-                    {
-                        if (item.callback != nullptr) item.callback();
-                        is_menu_open = false;
-                        release_flag = false;
-                        return;
-                    }
-                    evt = w->getMouseEvent();
+                    if (item.callback != nullptr) item.callback();
+                    is_menu_open = false;
+                    release_flag = false;
+                    return;
                 }
             }
         }
     }
 
-    bool was_released = false;
-    auto evt          = w->getMouseEvent();
-    while (evt.key != 0)
-    {
-        if (evt.key == KeyEvent::MOUSE_LEFT && evt.pressed == false)
-        {
-            was_released = true;
-            break;
-        }
-        evt = w->getMouseEvent();
-    }
+    bool was_released = checkForMouseUp(w);
 
     if (!inside_menu)
     {
@@ -349,21 +361,21 @@ glm::vec2 UIButton::getSize(UIRenderer* r)
 {
     float width = 0;
     if (icon_index != -1) width += icon_size + (spacing * 2);
-    if (!message.empty()) width += r->calculateTextWidth(message, {}) + (spacing * 2);
+    if (!message.empty()) width += r->calculateTextWidth(message, {}) + (spacing * 3);
     if (width == 0) width = 16;
 
     float height = 16;
     if (icon_index != -1) height = glm::max(height, icon_size + (spacing * 2));
     if (!message.empty()) height = glm::max(height, line_height + (spacing * 2));
 
-    last_size = glm::vec2{ width + spacing, height };
+    last_size = glm::vec2{ width, height };
 
     return last_size;
 }
 
 void UIButton::draw(UIRenderer* r, glm::vec2 position)
 {
-    r->addNineSlice(position, 0, getSize(r), is_pressed ? 2 : 0, panel_colour, 0b1111);
+    r->addNineSlice(position, 0, getSize(r), (is_pressed && mouse_inside) ? 2 : 0, panel_colour, 0b1111);
     glm::vec2 pos = position + glm::vec2{ spacing, spacing };
     if (icon_index != -1)
     {
@@ -375,20 +387,15 @@ void UIButton::draw(UIRenderer* r, glm::vec2 position)
 
 void UIButton::checkInput(Window* w, glm::vec2 position)
 {
-    bool inside = insideRect(w->getMousePosition(), position, last_size);
-    is_pressed  = inside && w->isMouseDown(KeyEvent::MOUSE_LEFT);
-    if (inside)
+    mouse_inside = insideRect(w->getMousePosition(), position, last_size);
+    if (!is_pressed && mouse_inside && checkForMouseDown(w)) is_pressed = true;
+    if (is_pressed && !w->isMouseDown(KeyEvent::MOUSE_LEFT))
     {
-        auto evt = w->getMouseEvent();
-        while (evt.key != 0)
+        if (mouse_inside)
         {
-            if (evt.key == KeyEvent::MOUSE_LEFT && evt.pressed == false)
-            {
-                if (callback_func != nullptr) callback_func();
-                break;
-            }
-            evt = w->getMouseEvent();
+            if (callback_func != nullptr) callback_func();
         }
+        is_pressed = false;
     }
 }
 
@@ -407,8 +414,7 @@ void UILabel::draw(UIRenderer* r, glm::vec2 position)
     if (icon_index != -1)
     {
         r->addSimple(pos, 1, { icon_size, icon_size }, icon_index, { 0, 0 }, { 1, 1 });
-        if (direction == TEXT_ALIGN_RIGHT)
-            pos.x -= (spacing * 2);
+        if (direction == TEXT_ALIGN_RIGHT) pos.x -= (spacing * 2);
         else
             pos.x += icon_size + (spacing * 2);
     }
@@ -418,12 +424,29 @@ void UILabel::draw(UIRenderer* r, glm::vec2 position)
 
 UIPanel::UIPanel(glm::vec4 fill, int layer, uint8_t borders)
 {
-    fill_colour = fill;
-    layer_index = layer;
+    fill_colour  = fill;
+    layer_index  = layer;
     border_flags = borders;
 }
 
-void AriaFlow::UIPanel::draw(UIRenderer* r, glm::vec2 position, glm::vec2 size)
+void UIPanel::draw(UIRenderer* r, glm::vec2 position, glm::vec2 size)
+{ r->addNineSlice(position, 0, size, layer_index, fill_colour, border_flags); }
+
+UIGrabbable::UIGrabbable() { grabbed = false; }
+
+glm::vec2 UIGrabbable::checkInput(Window* w, glm::vec2 position, glm::vec2 area_size)
 {
-    r->addNineSlice(position, 0, size, layer_index, fill_colour, border_flags);
+    if (insideRect(w->getMousePosition(), position, area_size) && !grabbed)
+    {
+        if (checkForMouseDown(w)) grabbed = true;
+    }
+
+    if (grabbed)
+    {
+        position += w->getMouseDelta();
+
+        if (!w->isMouseDown(KeyEvent::MOUSE_LEFT)) grabbed = false;
+    }
+
+    return position;
 }

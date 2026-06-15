@@ -92,28 +92,37 @@ int main()
     root_menu->addButton("test", []() -> void { std::cout << "test" << std::endl; });
 
     std::vector<UIButton*> buttons;
-    buttons.push_back(new UIButton("", nullptr, 0)); 
-    buttons.push_back(new UIButton("", nullptr, 1)); 
-    buttons.push_back(new UIButton("", nullptr, 2)); 
-    buttons.push_back(new UIButton("", nullptr, 3)); 
-    buttons.push_back(new UIButton("", nullptr, 4)); 
-    buttons.push_back(new UIButton("", nullptr, 5)); 
-    buttons.push_back(new UIButton("", nullptr, 6)); 
-    buttons.push_back(new UIButton("", nullptr, 7)); 
-    buttons.push_back(new UIButton("", nullptr, 8)); 
-    buttons.push_back(new UIButton("", nullptr, 9)); 
-    buttons.push_back(new UIButton("", nullptr, 10)); 
-    buttons.push_back(new UIButton("", nullptr, 11)); 
-    buttons.push_back(new UIButton("", nullptr, 12)); 
-    buttons.push_back(new UIButton("", nullptr, 13)); 
-    buttons.push_back(new UIButton("", nullptr, 14)); 
+    buttons.push_back(new UIButton("", [](){ std::cout << "hi" << std::endl;}, 0));
+    buttons.push_back(new UIButton("", nullptr, 1));
+    buttons.push_back(new UIButton("", nullptr, 2));
+    buttons.push_back(new UIButton("", nullptr, 3));
+    buttons.push_back(new UIButton("", nullptr, 4));
+    buttons.push_back(new UIButton("", nullptr, 5));
+    buttons.push_back(new UIButton("", nullptr, 6));
+    buttons.push_back(new UIButton("", nullptr, 7));
+    buttons.push_back(new UIButton("", nullptr, 8));
+    buttons.push_back(new UIButton("", nullptr, 9));
+    buttons.push_back(new UIButton("", nullptr, 10));
+    buttons.push_back(new UIButton("", nullptr, 11));
+    buttons.push_back(new UIButton("", nullptr, 12));
+    buttons.push_back(new UIButton("", nullptr, 13));
+    buttons.push_back(new UIButton("", nullptr, 14));
     buttons.push_back(new UIButton("", nullptr, 15));
-    UIPanel* button_panel = new UIPanel({ 0.4f, 0.4f, 0.4f, 1.0f }, 1, 0b1111);
-
-    glm::vec2 button_start = { 100, 100 };
+    UIPanel* button_panel          = new UIPanel({ 0.4f, 0.4f, 0.4f, 1.0f }, 1, 0b1111);
+    int palette_columns            = 2;
+    const glm::vec2 button_size    = buttons[0]->getSize(r);
+    glm::vec2 palette_size         = { button_size.x * palette_columns,
+        (button_size.y *
+            glm::ceil(static_cast<float>(buttons.size()) / static_cast<float>(palette_columns))) };
+    glm::vec2 palette_top_left     = { w->getSize().x - (palette_size.x + 16), root_menu->getHeight() + 8 };
+    UIGrabbable* palette_grabbale  = new UIGrabbable();
+    UIGrabbable* palette_left_grab = new UIGrabbable();
+    UIGrabbable* palette_right_grab = new UIGrabbable();
 
     while (!w->shouldClose())
     {
+        glm::vec2 old_window_size = w->getSize();
+
         // render
         w->makeCurrentContext();
         glClearColor(1.0f, 0.0f, 1.0f, 1.0f);
@@ -122,28 +131,69 @@ int main()
         w->present();
         w->poll();
 
+        glm::vec2 new_window_size = w->getSize();
+
         // build ui and check input
         r->clear();
 
         root_menu->checkInput(w);
         root_menu->draw(r, w->getSize().x);
 
-        button_panel->draw(r, button_start, { buttons[0]->getSize(r).x * 2, 8 });
-        button_start.y += 8;
-
-        int col = 0;
-        float height = 0;
-        for (auto button : buttons)
         {
-            glm::vec2 size = button->getSize(r);
-            button->checkInput(w, button_start + glm::vec2{ size.x * col, height });
-            button->draw(r, button_start + glm::vec2{ size.x * col, height });
-            if ((col + 1) % 2 == 0) height += size.y;
-            col = (col + 1) % 2;
+            glm::vec2 palette_midpoint = palette_top_left + (palette_size / 2.0f);
+
+            if (palette_midpoint.x > old_window_size.x / 2.0f)
+                palette_top_left.x += (new_window_size - old_window_size).x;
+
+            if (glm::abs(palette_midpoint.y - (old_window_size.y / 2.0f)) < (old_window_size.y / 8.0f))
+                palette_top_left.y += (new_window_size - old_window_size).y / 2.0f;
+
+            else if (palette_midpoint.y > old_window_size.y / 2.0f)
+                palette_top_left.y += (new_window_size - old_window_size).y;
+
+            const glm::vec2 button_size = buttons[0]->getSize(r);
+
+            palette_top_left = palette_grabbale->checkInput(w, palette_top_left, { palette_size.x, 12 });
+
+            glm::vec2 palette_left =
+                palette_left_grab->checkInput(w, palette_top_left, { 4, palette_size.y });
+            float size_change = palette_left.x - palette_top_left.x;
+            palette_top_left.x += size_change;
+            palette_size.x -= size_change;
+            glm::vec2 palette_right = palette_right_grab->checkInput(w,
+                palette_top_left + glm::vec2{ palette_size.x + 4, 0 }, { 4, palette_size.y });
+            size_change = palette_right.x - (palette_top_left.x + palette_size.x + 4);
+            palette_size.x += size_change;
+            palette_columns =
+                glm::min(glm::max(1, static_cast<int>(glm::floor(palette_size.x / button_size.x))),
+                    static_cast<int>(buttons.size()));
+            palette_size.y = (button_size.y * glm::ceil(static_cast<float>(buttons.size()) /
+                                                        static_cast<float>(palette_columns)));
+            if (!palette_left_grab->isCurrentlyGrabbed() && !palette_right_grab->isCurrentlyGrabbed())
+            {
+                palette_size.x = button_size.x * palette_columns;
+            }
+
+            palette_top_left = glm::clamp(palette_top_left, { 0, root_menu->getHeight() },
+                new_window_size - glm::vec2{ palette_size.x + 8, palette_size.y + 12 + 4 });
+
+            glm::vec2 temp = glm::round(palette_top_left);
+            button_panel->draw(r, temp, glm::round(glm::vec2{ palette_size.x + 8, palette_size.y + 12 + 4 }));
+            temp.y += 12;
+            temp.x += 4;
+
+            int col      = 0;
+            float height = 0;
+            for (auto button : buttons)
+            {
+                button->checkInput(w, temp + glm::vec2{ button_size.x * col, height });
+                button->draw(r, temp + glm::vec2{ button_size.x * col, height });
+                if ((col + 1) % palette_columns == 0) height += button_size.y;
+                col = (col + 1) % palette_columns;
+            }
         }
 
-        button_start.y -= 8;
-
+        consumeAllMouseEvents(w);
         r->finalise();
     }
 

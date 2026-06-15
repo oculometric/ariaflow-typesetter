@@ -49,6 +49,9 @@ void UIButtonPalette::draw(UIRenderer* r)
         if ((col + 1) % columns == 0) height += button_size.y;
         col = (col + 1) % columns;
     }
+
+    r->addSimple(panel_position + glm::vec2{ (panel_size.x / 2.0f) - (medium_border / 2.0f), 0 }, 1,
+        { medium_border, medium_border }, 1, { 0, 0 }, { 1, 1 });
 }
 
 void UIButtonPalette::checkInput(Window* w)

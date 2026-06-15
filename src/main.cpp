@@ -26,8 +26,10 @@ int main()
     UIResizablePanel* raw_editor =
         new UIResizablePanel({ 64, 128 }, { w->getSize().x / 2.0f, UIRootMenu::getHeight() },
             { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() });
+    raw_editor->title                = "raw view";
     UIResizablePanel* preview_editor = new UIResizablePanel({ 64, 128 }, { 0, UIRootMenu::getHeight() },
         { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() });
+    preview_editor->title            = "rendered view";
 
     UIRootMenu* root_menu = new UIRootMenu();
     root_menu->addLabel("", 12);

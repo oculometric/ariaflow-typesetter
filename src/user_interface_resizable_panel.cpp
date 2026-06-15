@@ -32,6 +32,17 @@ void UIResizablePanel::draw(UIRenderer* r)
     glm::vec2 content_position;
     glm::vec2 content_size;
     calculateContentArea(content_position, content_size);
+
+    // r->addSimple(panel_position + glm::vec2{ (panel_size.x / 2.0f) - (medium_border / 2.0f), 0 }, 1,
+    //     { medium_border, medium_border }, 1, { 0, 0 }, { 1, 1 });
+
+    TextFormatting format;
+    format.align = TEXT_ALIGN_CENTER;
+    format.flags = TEXT_FLAGS_BOLD;
+    format.size  = medium_border + 1.5f;
+    r->addText(panel_position + glm::vec2{ panel_size.x / 2.0f, text_push + small_border + 0.5f }, 1,
+        format, title, text_colour);
+
     // TEMPORARY
     r->addNineSlice(content_position, -1, content_size, 3, { 0.01f, 0.01f, 0.01f, 1.0f }, 0b1111);
 }

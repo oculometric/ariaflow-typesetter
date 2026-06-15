@@ -47,13 +47,16 @@ void UITextEditor::checkInput(Window* w, glm::vec2& position, glm::vec2& size)
 
         auto scaleRelative = [old_window_size, new_window_size](glm::vec2 point) -> glm::vec2
         {
-            bool left        = point.x < old_window_size.x / 2.0f;
-            bool center      = glm::abs(point.x - (old_window_size.x / 2.0f)) < (old_window_size.x / 4.0f);
-            bool top         = point.y < old_window_size.y / 2.0f;
-            bool middle      = glm::abs(point.y - (old_window_size.y / 2.0f)) < (old_window_size.y / 4.0f);
-            auto pick = [&](glm::vec2 size) -> glm::vec2 { return { center ? size.x / 2.0f : (left ? 0 : size.x),
-                middle ? size.y / 2.0f : (top ? 0 : size.y) }; };
-            glm::vec2 origin = pick(old_window_size);
+            bool left   = point.x < old_window_size.x / 2.0f;
+            bool center = glm::abs(point.x - (old_window_size.x / 2.0f)) < (old_window_size.x / 4.0f);
+            bool top    = point.y < old_window_size.y / 2.0f;
+            bool middle = glm::abs(point.y - (old_window_size.y / 2.0f)) < (old_window_size.y / 4.0f);
+            auto pick   = [&](glm::vec2 size) -> glm::vec2
+            {
+                return { center ? size.x / 2.0f : (left ? 0 : size.x),
+                    middle ? size.y / 2.0f : (top ? 0 : size.y) };
+            };
+            glm::vec2 origin     = pick(old_window_size);
             glm::vec2 new_origin = pick(new_window_size);
             return point + (new_origin - origin);
         };
@@ -114,7 +117,7 @@ void UITextEditor::checkInput(Window* w, glm::vec2& position, glm::vec2& size)
         glm::vec2 bl_grab = grabbables[7]->checkInput(w, grab_pos, glm::vec2{ 4, 4 });
         change2           = bl_grab - grab_pos;
         change2.x =
-            size.x - glm::clamp(size.x - change2.x, editor_min_width, static_cast<float>(w->getSize().x));
+            size.x - glm::clamp(size.x - change2.x, editor_min_width, max_size.x);
         change_size += change2 * glm::vec2{ 1, -1 };
         change_position.x += change2.x;
 

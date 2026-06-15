@@ -188,7 +188,7 @@ float UIRenderer::calculateTextWidth(const std::string& text, TextFormatting for
 {
     float ratio = formatting.size / text_size.y;
     return static_cast<float>(
-        (static_cast<int>(text.size()) * (static_cast<int>(text_size.x * ratio) + formatting.spacing)) -
+        (static_cast<float>(text.size()) * ((text_size.x * ratio) + formatting.spacing)) -
         formatting.spacing);
 }
 
@@ -423,6 +423,8 @@ void UIRenderer::draw(Window* window) const
     glUniform1i(glGetUniformLocation(shader_program, "line_atlas"), 4);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glUseProgram(shader_program);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDrawElements(GL_TRIANGLES, index_count, GL_UNSIGNED_INT, nullptr);
 }
 

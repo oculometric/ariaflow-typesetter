@@ -3,6 +3,9 @@
 
 using namespace AriaFlow;
 
+const TextFormatting format_menu{ TEXT_ALIGN_LEFT, TEXT_FLAGS_BOLD, true, false, false, {}, 1, 21 };
+const float text_push_menu = 1.0f;
+
 UIMenu::UIMenu() { overall_size = { 16, spacing * 2 }; }
 
 UIMenu::~UIMenu()
@@ -59,7 +62,7 @@ UIMenu* UIMenu::addSubMenu(const std::string& text, int icon)
 void UIMenu::draw(UIRenderer* r, glm::vec2 top_left)
 {
     float left     = top_left.x + (spacing * 2);
-    float top      = top_left.y + spacing + text_push;
+    float top      = top_left.y + spacing + text_push_menu;
     glm::vec2 size = { 16, spacing * 2 };
 
     bool icons_present = false;
@@ -73,20 +76,23 @@ void UIMenu::draw(UIRenderer* r, glm::vec2 top_left)
         break;
     }
 
+    TextFormatting format2 = format_menu;
+    format2.align          = TEXT_ALIGN_RIGHT;
     for (auto& item : items)
     {
         glm::vec2 text_size;
         if (item.icon != -1)
-            r->addSimple({ icon_left, top - text_push }, 19, { icon_size, icon_size }, item.icon, { 0, 0 },
-                { 1, 1 });
+            r->addSimple({ icon_left, top - text_push_menu }, 19, { icon_size, icon_size }, item.icon,
+                { 0, 0 }, { 1, 1 });
         if (item.is_divider) text_size = { 16, line_height };
         else
-            text_size = r->addText({ left, top }, 20, {}, item.text,
+            text_size = r->addText({ left, top }, 20, format_menu, item.text,
                 item.is_clickable ? text_colour : text_sec_colour);
-        item.position = { left - (spacing + spacing), top - (spacing + text_push) };
+        item.position = { left - (spacing + spacing), top - (spacing + text_push_menu) };
         if (icons_present) item.position.x -= icon_size + (spacing * 1);
         item.size = { text_size.x, line_height };
-        if (!item.shortcut.empty()) item.size.x += (spacing * 3) + r->calculateTextWidth(item.shortcut, {});
+        if (!item.shortcut.empty())
+            item.size.x += (spacing * 3) + r->calculateTextWidth(item.shortcut, format2);
         if (item.is_submenu) item.size.x += (spacing * 3) + icon_size;
         size.x = glm::max(item.size.x + (spacing * 3), size.x);
         size.y += line_height;
@@ -95,12 +101,13 @@ void UIMenu::draw(UIRenderer* r, glm::vec2 top_left)
     size.x += spacing + spacing;
     if (icons_present) size.x += icon_size + (spacing * 2);
     float right = icon_left + size.x;
+
     for (auto& item : items)
     {
         item.size.x = size.x;
         if (!item.shortcut.empty())
-            r->addText({ right - (spacing * 4), item.position.y + spacing + text_push }, 19,
-                { TEXT_ALIGN_RIGHT }, item.shortcut, text_sec_colour);
+            r->addText({ right - (spacing * 4), item.position.y + spacing + text_push_menu }, 19, format2,
+                item.shortcut, text_sec_colour);
 
         if (item.is_clicked)
             r->addNineSlice(item.position, 18, item.size + glm::vec2{ 0, spacing + 1.0f }, 2,
@@ -216,7 +223,7 @@ void UIRootMenu::draw(UIRenderer* r, float width)
             item.size.x += icon_size + spacing;
             tmp += icon_size + spacing;
         }
-        glm::vec2 text_size = r->addText({ tmp, top + text_push }, 20, {}, item.text,
+        glm::vec2 text_size = r->addText({ tmp, top + text_push_menu }, 20, format_menu, item.text,
             item.is_clickable ? text_colour : text_sec_colour);
         item.position       = { left - spacing, 0 };
         if (text_size.x > 0) item.size.x += (text_size.x + (spacing * 2));
@@ -281,8 +288,7 @@ void UIRootMenu::checkInput(Window* w)
 
     bool was_released = checkForMouseUp(w);
 
-    if (inside_menu)
-        w->setCursorType(CURSOR_NORMAL, 10);
+    if (inside_menu) w->setCursorType(CURSOR_NORMAL, 10);
 
     if (!inside_menu)
     {

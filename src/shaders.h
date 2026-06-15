@@ -132,10 +132,10 @@ void main()
                 tex_value = 1.0f;
         }
 
-        vec4 target_colour = (tex_value > 0.2f) ? colour_1 : colour_2;
-        if (target_colour.a < 0.5f)
-            discard;
-        frag_colour = vec4(target_colour.rgb, 1.0f);
+        vec4 target_colour = mix(colour_2, colour_1, pow(tex_value, 1.0f));
+        if (target_colour.a < 0.1f)
+           discard;
+        frag_colour = target_colour;
     }
     else if (draw_mode == 1)    // 9-slice mode
     {

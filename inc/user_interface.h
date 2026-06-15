@@ -217,72 +217,97 @@ public:
     void checkInput(Window* w);
 };
 
-class UIButton
+class UIElement
 {
-private:
+public:
+    glm::vec2 position;
+    glm::vec2 size;
+
+public:
+    UIElement(glm::vec2 offset = { 0, 0 }, glm::vec2 dimensions = { 16, 16 }) :
+        position(offset), size(dimensions) {};
+    UIElement(const UIElement& other)      = delete;
+    UIElement(UIElement&& other)           = delete;
+    void operator=(const UIElement& other) = delete;
+    void operator=(UIElement&& other)      = delete;
+    virtual ~UIElement() {};
+
+    virtual void draw(UIRenderer* r) {};
+    virtual void checkInput(Window* w) {};
+};
+
+class UIButton : public UIElement
+{
+public:
     std::string message;
     int icon_index;
-    glm::vec2 last_size;
+
+private:
     bool is_pressed = false;
     std::function<void(void)> callback_func;
     bool mouse_inside = false;
 
 public:
-    UIButton(const std::string& text, std::function<void(void)> callback, int icon = -1);
+    UIButton(const std::string& text, std::function<void(void)> callback, int icon = -1,
+        glm::vec2 offset = { 0, 0 });
     UIButton(const UIButton& other)       = delete;
     UIButton(UIButton&& other)            = delete;
     void operator=(const UIButton& other) = delete;
     void operator=(UIButton&& other)      = delete;
-    ~UIButton() {};
+    ~UIButton() override {};
 
     glm::vec2 getSize(UIRenderer* r);
 
-    void draw(UIRenderer* r, glm::vec2 position);
-    void checkInput(Window* w, glm::vec2 position);
+    void draw(UIRenderer* r) override;
+    void checkInput(Window* w) override;
 };
 
-class UILabel
+class UILabel : public UIElement
 {
-private:
+public:
     std::string message;
     int icon_index;
     TextAlign direction;
     TextFlags settings;
 
 public:
-    UILabel(const std::string& text, TextAlign align, TextFlags flags, int icon = -1);
+    UILabel(const std::string& text, TextAlign align, TextFlags flags, int icon = -1,
+        glm::vec2 offset = { 0, 0 });
     UILabel(const UILabel& other)        = delete;
     UILabel(UILabel&& other)             = delete;
     void operator=(const UILabel& other) = delete;
     void operator=(UILabel&& other)      = delete;
-    ~UILabel() {};
+    ~UILabel() override {};
 
-    void draw(UIRenderer* r, glm::vec2 position);
+    void draw(UIRenderer* r) override;
 };
 
-class UIPanel
+class UIPanel : public UIElement
 {
-private:
+public:
     glm::vec4 fill_colour;
     int layer_index;
     uint8_t border_flags;
 
 public:
-    UIPanel(glm::vec4 fill, int layer, uint8_t borders);
+    UIPanel(glm::vec4 fill, int layer, uint8_t borders, glm::vec2 offset = { 0, 0 },
+        glm::vec2 dimensions = { 16, 16 });
     UIPanel(const UIPanel& other)        = delete;
     UIPanel(UIPanel&& other)             = delete;
     void operator=(const UIPanel& other) = delete;
     void operator=(UIPanel&& other)      = delete;
-    ~UIPanel() {};
+    ~UIPanel() override {};
 
-    void draw(UIRenderer* r, glm::vec2 position, glm::vec2 size);
+    void draw(UIRenderer* r) override;
 };
 
-class UIGrabbable
+class UIGrabbable : public UIElement
 {
+public:
+    CursorType cursor;
+
 private:
     bool grabbed;
-    CursorType cursor;
 
 public:
     UIGrabbable(CursorType cursor_indicator = CURSOR_NORMAL);
@@ -290,50 +315,67 @@ public:
     UIGrabbable(UIGrabbable&& other)         = delete;
     void operator=(const UIGrabbable& other) = delete;
     void operator=(UIGrabbable&& other)      = delete;
-    ~UIGrabbable() {};
+    ~UIGrabbable() override {};
 
     bool isCurrentlyGrabbed() const { return grabbed; }
 
     glm::vec2 checkInput(Window* w, glm::vec2 position, glm::vec2 area_size);
 };
 
-class UIButtonPalette
+class UIButtonPalette : public UIElement
 {
 public:
-    glm::vec2 position;
-    glm::vec2 size;
+    int columns = 2;
 
 private:
     UIPanel* panel;
     std::array<UIGrabbable*, 3> grabbables;
     std::vector<UIButton*> buttons;
-    int columns = 2;
     glm::vec2 button_size;
 
 public:
-    UIButtonPalette();
+    UIButtonPalette(int button_columns = 2, glm::vec2 offset = { 0, 0 });
     UIButtonPalette(const UIButtonPalette& other) = delete;
     UIButtonPalette(UIButtonPalette&& other)      = delete;
     void operator=(const UIButtonPalette& other)  = delete;
     void operator=(UIButtonPalette&& other)       = delete;
-    ~UIButtonPalette();
+    ~UIButtonPalette() override;
 
     UIButton* addButton(int icon, std::function<void(void)> callback);
 
-    void draw(UIRenderer* r);
-    void checkInput(Window* w);
+    void draw(UIRenderer* r) override;
+    void checkInput(Window* w) override;
 
 private:
     glm::vec2 recalculateSize();
     glm::vec2 calculateButtonArea();
 };
 
-class UITextEditor
+class UIResizablePanel : public UIElement
 {
 public:
-    glm::vec2 position;
-    glm::vec2 size;
+    glm::vec2 minimum_size;
+    UIElement* child;
 
+private:
+    std::array<UIGrabbable*, 9> grabbables;
+
+public:
+    UIResizablePanel(glm::vec2 min_size = glm::vec2{ 64, 128 }, glm::vec2 offset = { 0, 0 },
+        glm::vec2 dimensions = { 16, 16 });
+    UIResizablePanel(const UIResizablePanel& other) = delete;
+    UIResizablePanel(UIResizablePanel&& other)      = delete;
+    void operator=(const UIResizablePanel& other)   = delete;
+    void operator=(UIResizablePanel&& other)        = delete;
+    ~UIResizablePanel() override;
+
+    void draw(UIRenderer* r) override;
+    void checkInput(Window* w) override;
+    void calculateContentArea(glm::vec2& offset, glm::vec2& dimension);
+};
+
+class UITextEditor : public UIElement
+{
 private:
     std::string text;
     std::vector<std::pair<size_t, size_t>> lines;
@@ -343,15 +385,13 @@ private:
     glm::vec2 last_checked_size;
     bool needs_lines_update;
     bool needs_cursor_update;
-    std::array<UIGrabbable*, 9> grabbables;
 
 public:
-    UITextEditor(glm::vec2 offset = { 0, 0 }, glm::vec2 dimensions = { 16, 16 });
     UITextEditor(const UITextEditor& other)   = delete;
     UITextEditor(UITextEditor&& other)        = delete;
     void operator=(const UITextEditor& other) = delete;
     void operator=(UITextEditor&& other)      = delete;
-    ~UITextEditor();
+    ~UITextEditor() override {};
 
     glm::ivec2 getCursorPos() const { return { cursor_line + 1, cursor_column + 1 }; }
     std::string getContent() const { return text; }
@@ -361,9 +401,8 @@ public:
         updateLines();
         updateCursor();
     }
-
-    void draw(UIRenderer* r);
-    void checkInput(Window* w);
+    void draw(UIRenderer* r) override;
+    void checkInput(Window* w) override;
 
 private:
     void updateLines();
@@ -374,7 +413,8 @@ bool insideRect(glm::vec2 point, glm::vec2 top_left, glm::vec2 size);
 bool checkForMouseDown(Window* w);
 bool checkForMouseUp(Window* w);
 void consumeAllMouseEvents(Window* w);
-void trackWindowResize(Window* w, glm::vec2& top_left, glm::vec2 size);
+void trackWindowResizeFixedSize(Window* w, glm::vec2& top_left, glm::vec2 size);
+void trackWindowResizeScaleSize(Window* w, glm::vec2& top_left, glm::vec2& size);
 
 const float line_height          = 24.0f;
 const float icon_size            = 24.0f;
@@ -384,5 +424,7 @@ const glm::vec4 panel_colour     = { 0.12f, 0.12f, 0.12f, 1.0f };
 const glm::vec4 panel_sec_colour = { 0.3f, 0.3f, 0.3f, 1.0f };
 const glm::vec3 text_colour      = { 0.9f, 0.9f, 0.9f };
 const glm::vec3 text_sec_colour  = { 0.5f, 0.5f, 0.5f };
+const float grab_drag_border     = 12.0f;
+const float grab_scale_border    = 4.0f;
 
 }; // namespace AriaFlow

@@ -2,9 +2,10 @@
 
 using namespace AriaFlow;
 
-UIButtonPalette::UIButtonPalette()
+UIButtonPalette::UIButtonPalette(int button_columns, glm::vec2 offset)
 {
-    position         = { 0, 0 };
+    columns          = button_columns;
+    position         = offset;
     UIButton* button = new UIButton("", nullptr, 0);
     button_size      = button->getSize(nullptr);
     delete button;
@@ -35,41 +36,24 @@ void UIButtonPalette::draw(UIRenderer* r)
     glm::vec2 panel_size       = glm::round(size);
     glm::vec2 content_position = panel_position + glm::vec2{ 4, 12 };
     glm::vec2 content_size     = glm::round(calculateButtonArea());
-    panel->draw(r, panel_position, panel_size);
+    panel->position            = panel_position;
+    panel->size                = panel_size;
+    panel->draw(r);
 
     int col      = 0;
     float height = 0;
     for (auto button : buttons)
     {
-        button->draw(r, content_position + glm::vec2{ button_size.x * col, height });
+        button->position = content_position + glm::vec2{ button_size.x * col, height };
+        button->draw(r);
         if ((col + 1) % columns == 0) height += button_size.y;
         col = (col + 1) % columns;
     }
 }
 
-void AriaFlow::trackWindowResize(Window* w, glm::vec2& top_left, glm::vec2 size)
-{
-    glm::vec2 old_window_size = w->getLastSize();
-    glm::vec2 new_window_size = w->getSize();
-
-    glm::vec2 midpoint     = top_left + (size / 2.0f);
-    glm::vec2 bottom_right = top_left + size;
-
-    if ((glm::abs(midpoint.x - (old_window_size.x / 2.0f)) < (old_window_size.x / 8.0f)) &&
-        !(top_left.x < 100.0f || bottom_right.x > old_window_size.x - 100.0f))
-        top_left.x += (new_window_size - old_window_size).x / 2.0f;
-    else if (midpoint.x > old_window_size.x / 2.0f) top_left.x += (new_window_size - old_window_size).x;
-
-    if ((glm::abs(midpoint.y - (old_window_size.y / 2.0f)) < (old_window_size.y / 8.0f)) &&
-        !(top_left.y < 100.0f || bottom_right.y > old_window_size.y - 100.0f))
-        top_left.y += (new_window_size - old_window_size).y / 2.0f;
-    else if (midpoint.y > old_window_size.y / 2.0f)
-        top_left.y += (new_window_size - old_window_size).y;
-}
-
 void UIButtonPalette::checkInput(Window* w)
 {
-    trackWindowResize(w, position, size);
+    trackWindowResizeFixedSize(w, position, size);
 
     position = grabbables[0]->checkInput(w, position, { size.x, 12 });
 
@@ -106,7 +90,8 @@ void UIButtonPalette::checkInput(Window* w)
     float height = 0;
     for (auto button : buttons)
     {
-        button->checkInput(w, content_position + glm::vec2{ button_size.x * col, height });
+        button->position = content_position + glm::vec2{ button_size.x * col, height };
+        button->checkInput(w);
         if ((col + 1) % columns == 0) height += button_size.y;
         col = (col + 1) % columns;
     }

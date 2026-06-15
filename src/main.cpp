@@ -82,14 +82,15 @@ int main()
 
     root_menu->addButton("test", []() -> void { std::cout << "test" << std::endl; });
 
-    UIButtonPalette* palette = new UIButtonPalette();
-    palette->position        = { w->getSize().x - palette->size.x, root_menu->getHeight() };
+    UIButtonPalette* palette = new UIButtonPalette(1);
+    palette->position = { (w->getSize().x - palette->size.x) - 16.0f, root_menu->getHeight() + 16.0f };
     for (int i = 0; i < 16; ++i) palette->addButton(i, [i]() { std::cout << i << std::endl; });
 
-    UITextEditor* raw_editor = new UITextEditor({ w->getSize().x / 2.0f, root_menu->getHeight() },
-        { w->getSize().x / 2.0f, w->getSize().y - root_menu->getHeight() });
+    UIResizablePanel* raw_editor =
+        new UIResizablePanel({ 64, 128 }, { w->getSize().x / 2.0f, root_menu->getHeight() },
+            { w->getSize().x / 2.0f, w->getSize().y - root_menu->getHeight() });
 
-    UITextEditor* preview_editor = new UITextEditor({ 0, root_menu->getHeight() },
+    UIResizablePanel* preview_editor = new UIResizablePanel({ 64, 128 }, { 0, root_menu->getHeight() },
         { w->getSize().x / 2.0f, w->getSize().y - root_menu->getHeight() });
 
     while (!w->shouldClose())

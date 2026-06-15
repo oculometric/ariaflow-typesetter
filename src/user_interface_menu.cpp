@@ -281,6 +281,9 @@ void UIRootMenu::checkInput(Window* w)
 
     bool was_released = checkForMouseUp(w);
 
+    if (inside_menu)
+        w->setCursorType(CURSOR_NORMAL, 10);
+
     if (!inside_menu)
     {
         is_menu_open = false;

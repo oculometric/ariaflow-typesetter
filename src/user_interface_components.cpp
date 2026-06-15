@@ -29,14 +29,14 @@ glm::vec2 UIButton::getSize(UIRenderer* r)
 
 void UIButton::draw(UIRenderer* r)
 {
-    r->addNineSlice(position, 0, getSize(r), (is_pressed && mouse_inside) ? 2 : 0, panel_colour, 0b1111);
+    r->addNineSlice(position, z, getSize(r), (is_pressed && mouse_inside) ? 2 : 0, panel_colour, 0b1111);
     glm::vec2 pos = position + glm::vec2{ spacing, spacing };
     if (icon_index != -1)
     {
-        r->addSimple(pos, 1, { icon_size, icon_size }, icon_index, { 0, 0 }, { 1, 1 });
+        r->addSimple(pos, z, { icon_size, icon_size }, icon_index, { 0, 0 }, { 1, 1 });
         pos.x += icon_size + (spacing * 2);
     }
-    if (!message.empty()) r->addText(pos + glm::vec2{ 0, text_push }, 1, {}, message, text_colour);
+    if (!message.empty()) r->addText(pos + glm::vec2{ 0, text_push }, z, {}, message, text_colour);
 }
 
 void UIButton::checkInput(Window* w)
@@ -68,13 +68,13 @@ void UILabel::draw(UIRenderer* r)
     if (direction == TEXT_ALIGN_RIGHT) pos -= icon_size;
     if (icon_index != -1)
     {
-        r->addSimple(pos, 1, { icon_size, icon_size }, icon_index, { 0, 0 }, { 1, 1 });
+        r->addSimple(pos, z, { icon_size, icon_size }, icon_index, { 0, 0 }, { 1, 1 });
         if (direction == TEXT_ALIGN_RIGHT) pos.x -= (spacing * 2);
         else
             pos.x += icon_size + (spacing * 2);
     }
     if (!message.empty())
-        r->addText(pos + glm::vec2{ 0, text_push }, 1, { direction, settings }, message, text_colour);
+        r->addText(pos + glm::vec2{ 0, text_push }, z, { direction, settings }, message, text_colour);
 }
 
 UIPanel::UIPanel(glm::vec4 fill, int layer, uint8_t borders, glm::vec2 offset, glm::vec2 dimensions) :
@@ -86,7 +86,7 @@ UIPanel::UIPanel(glm::vec4 fill, int layer, uint8_t borders, glm::vec2 offset, g
 }
 
 void UIPanel::draw(UIRenderer* r)
-{ r->addNineSlice(position, 0, size, layer_index, fill_colour, border_flags); }
+{ r->addNineSlice(position, z, size, layer_index, fill_colour, border_flags); }
 
 UIGrabbable::UIGrabbable(CursorType cursor_indicator) : UIElement({ 0, 0 }, { 0, 0 })
 {

@@ -1,3 +1,4 @@
+#include "document.h"
 #include "user_interface.h"
 #include "window.h"
 
@@ -10,7 +11,8 @@ int main()
 {
     Window* w = new Window();
     w->makeCurrentContext();
-    UIRenderer* r = new UIRenderer();
+    UIRenderer* r  = new UIRenderer();
+    UIRenderer* r2 = new UIRenderer(1);
 
     // r->addText({ 0, 0 }, 0.0f, {}, "Hello, World!", { 1, 1, 1 });
     // r->addNineSlice({ 36 * 0, 64 }, 0.0f, { 36, 36 }, 0, { 1, 1, 1, 1 });
@@ -23,10 +25,17 @@ int main()
     //     r->addSimple({ x, 128 }, 0.0f, { 12, 12 }, i, { 0, 0 }, { 1, 1 });
     // }
 
+    Document* d = new Document();
+
     UIResizablePanel* raw_editor =
         new UIResizablePanel({ 64, 128 }, { w->getSize().x / 2.0f, UIRootMenu::getHeight() },
             { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() });
-    raw_editor->title                = "raw view";
+    raw_editor->title         = "raw view";
+    UITextEditor* text_editor = new UITextEditor();
+    text_editor->custom_r     = r2;
+    text_editor->data_source  = d;
+    raw_editor->child         = text_editor;
+
     UIResizablePanel* preview_editor = new UIResizablePanel({ 64, 128 }, { 0, UIRootMenu::getHeight() },
         { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() });
     preview_editor->title            = "rendered view";
@@ -35,7 +44,15 @@ int main()
     root_menu->addLabel("", 12);
 
     UIMenu* file_menu = root_menu->addSubMenu("file");
-    file_menu->addButton("new", []() -> void { std::cout << "new" << std::endl; }, "Ctrl+N");
+    // TODO: check for unsaved changes!
+    file_menu->addButton(
+        "new",
+        [&]() -> void
+        {
+            d                        = new Document();
+            text_editor->data_source = d;
+        },
+        "Ctrl+N");
     file_menu->addButton("open...", []() -> void { std::cout << "open" << std::endl; }, "Ctrl+O", 14);
     UIMenu* recents = file_menu->addSubMenu("open recent");
     recents->addButton("item 1", []() -> void { std::cout << "test" << std::endl; });
@@ -115,14 +132,18 @@ int main()
     while (!w->shouldClose())
     {
         // render
+        w->setTitle((d->hasUnsavedChanges() ? "*" : "") +
+                    (d->getPath().empty() ? "Untitled.aria" : d->getPath()) + " - ariaflow");
         w->makeCurrentContext();
         r->draw(w);
+        r2->draw(w);
         w->present();
         w->poll();
         w->setCursorType(CURSOR_NORMAL);
 
         // build ui and check input
         r->clear();
+        r2->clear();
 
         root_menu->checkInput(w);
         root_menu->draw(r, w->getSize().x);
@@ -138,6 +159,7 @@ int main()
 
         consumeAllMouseEvents(w);
         r->finalise();
+        r2->finalise();
     }
 
     delete w;

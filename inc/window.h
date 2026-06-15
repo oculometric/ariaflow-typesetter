@@ -132,6 +132,7 @@ private:
     glm::vec2 mouse_delta;
     std::array<GLFWcursor*, CURSOR_MAX_ENUM> cursors;
     CursorType current_cursor = CURSOR_BUSY;
+    int last_cursor_priority  = 0;
     glm::vec2 last_frame_size;
     glm::vec2 current_frame_size;
 
@@ -157,7 +158,7 @@ public:
     bool shouldClose() const;
     void makeCurrentContext() const;
 
-    void setCursorType(CursorType t) { current_cursor = t; }
+    void setCursorType(CursorType t, int priority = 0);
 
 private:
     static void keyFunction(GLFWwindow* window, int key, int scancode, int action, int mods);

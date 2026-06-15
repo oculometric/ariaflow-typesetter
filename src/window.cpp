@@ -98,6 +98,11 @@ Window::Window()
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
             throw std::runtime_error("failed to initialize GLAD");
     }
+
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_GEQUAL);
+    glDepthRange(-1000.0f, 1000.0f);
+    glDisable(GL_CULL_FACE);
     windows[window] = this;
 }
 
@@ -163,6 +168,7 @@ bool Window::isMouseDown(KeyEvent::Key mouse_button) const
 
 void Window::poll()
 {
+    last_cursor_priority = 0;
     glfwPollEvents();
     last_frame_size = current_frame_size;
     int x, y;
@@ -179,8 +185,23 @@ void Window::present() const
 {
     glfwSetCursor(window, cursors[current_cursor]);
     glfwSwapBuffers(window);
+    int width  = getSize().x;
+    int height = getSize().y;
+    glViewport(0, 0, width, height);
+    glClearColor(0.08f, 0.08f, 0.08f, 1.0f);
+    glClearDepth(-1000.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 bool Window::shouldClose() const { return glfwWindowShouldClose(window); }
 
 void Window::makeCurrentContext() const { glfwMakeContextCurrent(window); }
+
+void Window::setCursorType(CursorType t, int priority)
+{
+    if (priority >= last_cursor_priority)
+    {
+        current_cursor       = t;
+        last_cursor_priority = priority;
+    }
+}

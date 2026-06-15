@@ -96,7 +96,7 @@ private:
     glm::vec4 background_colour = { 0, 0, 0, 0 };
 
 public:
-    UIRenderer();
+    UIRenderer(int font_index = 0);
     UIRenderer(const UIRenderer& other)     = delete;
     UIRenderer(UIRenderer&& other)          = delete;
     void operator=(const UIRenderer& other) = delete;
@@ -222,6 +222,7 @@ class UIElement
 public:
     glm::vec2 position;
     glm::vec2 size;
+    float z = 0.0f;
 
 public:
     UIElement(glm::vec2 offset = { 0, 0 }, glm::vec2 dimensions = { 16, 16 }) :
@@ -241,6 +242,7 @@ class UIButton : public UIElement
 public:
     std::string message;
     int icon_index;
+    float z = 0.0f;
 
 private:
     bool is_pressed = false;
@@ -328,7 +330,6 @@ public:
     int columns = 2;
 
 private:
-    UIPanel* panel;
     std::array<UIGrabbable*, 3> grabbables;
     std::vector<UIButton*> buttons;
     glm::vec2 button_size;
@@ -355,7 +356,7 @@ class UIResizablePanel : public UIElement
 {
 public:
     glm::vec2 minimum_size;
-    UIElement* child;
+    UIElement* child  = nullptr;
     std::string title = "???";
 
 private:
@@ -375,8 +376,14 @@ public:
     void calculateContentArea(glm::vec2& offset, glm::vec2& dimension);
 };
 
+class Document;
+
 class UITextEditor : public UIElement
 {
+public:
+    Document* data_source;
+    UIRenderer* custom_r = nullptr;
+
 private:
     std::string text;
     std::vector<std::pair<size_t, size_t>> lines;
@@ -388,20 +395,15 @@ private:
     bool needs_cursor_update;
 
 public:
+    UITextEditor()                            = default;
     UITextEditor(const UITextEditor& other)   = delete;
     UITextEditor(UITextEditor&& other)        = delete;
     void operator=(const UITextEditor& other) = delete;
     void operator=(UITextEditor&& other)      = delete;
-    ~UITextEditor() override {};
+    ~UITextEditor() override                  = default;
 
     glm::ivec2 getCursorPos() const { return { cursor_line + 1, cursor_column + 1 }; }
-    std::string getContent() const { return text; }
-    void setContent(const std::string& content, size_t cursor_index)
-    {
-        text = content;
-        updateLines();
-        updateCursor();
-    }
+
     void draw(UIRenderer* r) override;
     void checkInput(Window* w) override;
 
@@ -425,7 +427,7 @@ const glm::vec4 panel_colour     = { 0.12f, 0.12f, 0.12f, 1.0f };
 const glm::vec4 panel_sec_colour = { 0.3f, 0.3f, 0.3f, 1.0f };
 const glm::vec3 text_colour      = { 0.9f, 0.9f, 0.9f };
 const glm::vec3 text_sec_colour  = { 0.5f, 0.5f, 0.5f };
-const float medium_border     = 16.0f;
-const float small_border    = 4.0f;
+const float medium_border        = 16.0f;
+const float small_border         = 4.0f;
 
 }; // namespace AriaFlow

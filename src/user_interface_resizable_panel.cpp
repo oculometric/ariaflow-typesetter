@@ -28,23 +28,27 @@ void UIResizablePanel::draw(UIRenderer* r)
 {
     glm::vec2 panel_position = glm::round(position);
     glm::vec2 panel_size     = glm::round(size);
-    r->addNineSlice(panel_position, -1, panel_size, 1, panel_colour, 0b1111);
+    r->addNineSlice(panel_position, z, panel_size, 1, panel_colour, 0b1111);
     glm::vec2 content_position;
     glm::vec2 content_size;
     calculateContentArea(content_position, content_size);
-
-    // r->addSimple(panel_position + glm::vec2{ (panel_size.x / 2.0f) - (medium_border / 2.0f), 0 }, 1,
-    //     { medium_border, medium_border }, 1, { 0, 0 }, { 1, 1 });
 
     TextFormatting format;
     format.align = TEXT_ALIGN_CENTER;
     format.flags = TEXT_FLAGS_BOLD;
     format.size  = medium_border + 1.5f;
-    r->addText(panel_position + glm::vec2{ panel_size.x / 2.0f, text_push + small_border + 0.5f }, 1,
+    r->addText(panel_position + glm::vec2{ panel_size.x / 2.0f, text_push + small_border + 0.5f }, z,
         format, title, text_colour);
 
-    // TEMPORARY
-    r->addNineSlice(content_position, -1, content_size, 3, { 0.01f, 0.01f, 0.01f, 1.0f }, 0b1111);
+    if (child)
+    {
+        child->size     = content_size;
+        child->position = content_position;
+        child->z = z + 1.0f;
+        child->draw(r);
+    }
+    else
+        r->addNineSlice(content_position, z, content_size, 3, { 0.01f, 0.01f, 0.01f, 1.0f }, 0b1111);
 }
 
 void UIResizablePanel::checkInput(Window* w)
@@ -121,6 +125,16 @@ void UIResizablePanel::checkInput(Window* w)
         position = glm::clamp(position, { 16.0f - size.x, UIRootMenu::getHeight() },
             glm::vec2(w->getSize()) - 16.0f);
         size     = glm::clamp(size, minimum_size, glm::vec2(10000.0f));
+    }
+
+    glm::vec2 content_position;
+    glm::vec2 content_size;
+    calculateContentArea(content_position, content_size);
+    if (child)
+    {
+        child->size     = content_size;
+        child->position = content_position;
+        child->checkInput(w);
     }
 
     // TODO: snapping to window when released?

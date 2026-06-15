@@ -5,12 +5,14 @@
 
 #include <cstring>
 #include <glad.h>
+#include <glm/gtc/matrix_access.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <stb_image.h>
 #include <stdexcept>
 
 using namespace AriaFlow;
 
-UIRenderer::UIRenderer()
+UIRenderer::UIRenderer(int font_index)
 {
     glGenBuffers(1, &vertex_buffer);
     glGenBuffers(1, &index_buffer);
@@ -87,9 +89,6 @@ UIRenderer::UIRenderer()
         reinterpret_cast<void*>((offsetof(Vertex, uv))));
     glEnableVertexAttribArray(5);
 
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-
     auto make_tex = [](unsigned int* texture, int slot, unsigned char* data, size_t data_size) -> void
     {
         glGenTextures(1, texture);
@@ -105,8 +104,18 @@ UIRenderer::UIRenderer()
         stbi_image_free(pixels);
     };
 
-    make_tex(&text_atlas_texture, GL_TEXTURE0, roboto_font, roboto_font_size);
-    make_tex(&text_bold_atlas_texture, GL_TEXTURE1, roboto_font_bold, roboto_font_bold_size);
+    if (font_index == 1)
+    {
+        make_tex(&text_atlas_texture, GL_TEXTURE0, ibm_font, ibm_font_size);
+        make_tex(&text_bold_atlas_texture, GL_TEXTURE1, ibm_font, ibm_font_size);
+        text_size = { 12, 23 };
+    }
+    else
+    {
+        make_tex(&text_atlas_texture, GL_TEXTURE0, roboto_font, roboto_font_size);
+        make_tex(&text_bold_atlas_texture, GL_TEXTURE1, roboto_font_bold, roboto_font_bold_size);
+        text_size = { 34, 62 };
+    }
     make_tex(&slice_atlas_texture, GL_TEXTURE2, slices, slices_size);
     make_tex(&icon_atlas_texture, GL_TEXTURE3, icons, icons_size);
     make_tex(&line_atlas_texture, GL_TEXTURE4, icons, icons_size);
@@ -389,18 +398,12 @@ void UIRenderer::draw(Window* window) const
 {
     window->makeCurrentContext();
 
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-
     static int scale_factor = 1;
     int width               = window->getSize().x;
     int height              = window->getSize().y;
-    glViewport(0, 0, width, height);
-    glClearColor(0.08f, 0.08f, 0.08f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    const float transform[16] = { 2.0f / static_cast<float>(width) * static_cast<float>(scale_factor), 0, 0,
-        0, 0, -2.0f / static_cast<float>(height) * static_cast<float>(scale_factor), 0, 0, 0, 0, 1, 0, -1,
-        1, 0, 1 };
+    glm::vec2 size          = window->getSize();
+
+    auto transform = glm::ortho(0.0f, size.x, size.y, 0.0f, 1000.0f, -1000.0f);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, text_atlas_texture);
     glActiveTexture(GL_TEXTURE1);
@@ -412,7 +415,7 @@ void UIRenderer::draw(Window* window) const
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, line_atlas_texture);
     glBindVertexArray(vertex_array_object);
-    glUniformMatrix4fv(transform_var, 1, GL_FALSE, transform);
+    glUniformMatrix4fv(transform_var, 1, GL_FALSE, (float*)&transform);
     glUniform1i(glGetUniformLocation(shader_program, "text_atlas"), 0);
     glUniform1i(glGetUniformLocation(shader_program, "text_bold_atlas"), 1);
     glUniform1i(glGetUniformLocation(shader_program, "slice_atlas"), 2);
@@ -510,22 +513,22 @@ void UIRenderer::updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 
 
     // top left
     vertices[backing.first_vertex + 0] = Vertex{
-        { _p1.x, _p1.y, 0 },
+        { _p1.x, _p1.y, backing.z },
         colour_1, colour_2, data_1, data_2, uv_tl
     };
     // top right
     vertices[backing.first_vertex + 1] = Vertex{
-        { _p2.x, _p2.y, 0 },
+        { _p2.x, _p2.y, backing.z },
         colour_1, colour_2, data_1, data_2, { uv_br.x, uv_tl.y }
     };
     // bottom left
     vertices[backing.first_vertex + 2] = Vertex{
-        { _p3.x, _p3.y, 0 },
+        { _p3.x, _p3.y, backing.z },
         colour_1, colour_2, data_1, data_2, { uv_tl.x, uv_br.y }
     };
     // bottom right
     vertices[backing.first_vertex + 3] = Vertex{
-        { _p4.x, _p4.y, 0 },
+        { _p4.x, _p4.y, backing.z },
         colour_1, colour_2, data_1, data_2, uv_br
     };
 

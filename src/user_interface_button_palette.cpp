@@ -10,7 +10,6 @@ UIButtonPalette::UIButtonPalette(int button_columns, glm::vec2 offset)
     button_size      = button->getSize(nullptr);
     delete button;
     size          = recalculateSize();
-    panel         = new UIPanel({ 0.4f, 0.4f, 0.4f, 1.0f }, 1, 0b1111);
     grabbables[0] = new UIGrabbable(CURSOR_HAND);
     grabbables[1] = new UIGrabbable(CURSOR_RESIZE_HORIZONTAL);
     grabbables[2] = new UIGrabbable(CURSOR_RESIZE_HORIZONTAL);
@@ -18,7 +17,6 @@ UIButtonPalette::UIButtonPalette(int button_columns, glm::vec2 offset)
 
 UIButtonPalette::~UIButtonPalette()
 {
-    delete panel;
     for (auto g : grabbables) delete g;
     for (auto b : buttons) delete b;
 }
@@ -27,6 +25,7 @@ UIButton* UIButtonPalette::addButton(int icon, std::function<void(void)> callbac
 {
     UIButton* b = new UIButton("", callback, icon);
     buttons.push_back(b);
+    b->z = 8.2f;
     return b;
 }
 
@@ -36,9 +35,7 @@ void UIButtonPalette::draw(UIRenderer* r)
     glm::vec2 panel_size       = glm::round(size);
     glm::vec2 content_position = panel_position + glm::vec2{ small_border, medium_border };
     glm::vec2 content_size     = glm::round(calculateButtonArea());
-    panel->position            = panel_position;
-    panel->size                = panel_size;
-    panel->draw(r);
+    r->addNineSlice(panel_position, 8.1f, panel_size, 1, { 0.4f, 0.4f, 0.4f, 1.0f }, 0b1111);
 
     int col      = 0;
     float height = 0;
@@ -50,7 +47,7 @@ void UIButtonPalette::draw(UIRenderer* r)
         col = (col + 1) % columns;
     }
 
-    r->addSimple(panel_position + glm::vec2{ (panel_size.x / 2.0f) - (medium_border / 2.0f), 0 }, 1,
+    r->addSimple(panel_position + glm::vec2{ (panel_size.x / 2.0f) - (medium_border / 2.0f), 0 }, 8.2f,
         { medium_border, medium_border }, 1, { 0, 0 }, { 1, 1 });
 }
 

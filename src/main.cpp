@@ -23,6 +23,12 @@ int main()
     //     r->addSimple({ x, 128 }, 0.0f, { 12, 12 }, i, { 0, 0 }, { 1, 1 });
     // }
 
+    UIResizablePanel* raw_editor =
+        new UIResizablePanel({ 64, 128 }, { w->getSize().x / 2.0f, UIRootMenu::getHeight() },
+            { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() });
+    UIResizablePanel* preview_editor = new UIResizablePanel({ 64, 128 }, { 0, UIRootMenu::getHeight() },
+        { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() });
+
     UIRootMenu* root_menu = new UIRootMenu();
     root_menu->addLabel("", 12);
 
@@ -63,7 +69,25 @@ int main()
     view_menu->addButton("show metrics", nullptr, "Alt+M");
     view_menu->addButton("show guides", nullptr, "Alt+G", 10);
     view_menu->addDivider();
-    view_menu->addButton("reset layout", nullptr, "", 15);
+    UIMenu* view_layouts = view_menu->addSubMenu("reset layout", 15);
+    view_layouts->addButton("side-by-side",
+        [&]()
+        {
+            raw_editor->position = { w->getSize().x / 2.0f, UIRootMenu::getHeight() };
+            raw_editor->size     = { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() };
+
+            preview_editor->position = { 0, UIRootMenu::getHeight() };
+            preview_editor->size     = { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() };
+        });
+    view_layouts->addButton("top-to-bottom",
+        [&]()
+        {
+            preview_editor->position = { 0, UIRootMenu::getHeight() };
+            preview_editor->size     = { w->getSize().x, w->getSize().y / 2.0f };
+
+            raw_editor->position = { 0, UIRootMenu::getHeight() + w->getSize().y / 2.0f };
+            raw_editor->size     = { w->getSize().x, (w->getSize().y / 2.0f) - UIRootMenu::getHeight() };
+        });
 
     UIMenu* help_menu = root_menu->addSubMenu("help");
     help_menu->addButton("about", nullptr);
@@ -85,13 +109,6 @@ int main()
     UIButtonPalette* palette = new UIButtonPalette(1);
     palette->position = { (w->getSize().x - palette->size.x) - 16.0f, root_menu->getHeight() + 16.0f };
     for (int i = 0; i < 16; ++i) palette->addButton(i, [i]() { std::cout << i << std::endl; });
-
-    UIResizablePanel* raw_editor =
-        new UIResizablePanel({ 64, 128 }, { w->getSize().x / 2.0f, root_menu->getHeight() },
-            { w->getSize().x / 2.0f, w->getSize().y - root_menu->getHeight() });
-
-    UIResizablePanel* preview_editor = new UIResizablePanel({ 64, 128 }, { 0, root_menu->getHeight() },
-        { w->getSize().x / 2.0f, w->getSize().y - root_menu->getHeight() });
 
     while (!w->shouldClose())
     {

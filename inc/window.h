@@ -131,7 +131,7 @@ private:
     glm::vec2 last_mouse_position;
     glm::vec2 mouse_delta;
     std::array<GLFWcursor*, CURSOR_MAX_ENUM> cursors;
-    CursorType current_cursor;
+    CursorType current_cursor = CURSOR_BUSY;
     glm::vec2 last_frame_size;
 
 public:

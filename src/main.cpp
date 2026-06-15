@@ -27,21 +27,20 @@ int main()
 
     Document* d = new Document();
 
-    UIResizablePanel* raw_editor =
-        new UIResizablePanel({ 64, 128 }, { w->getSize().x / 2.0f, UIRootMenu::getHeight() },
-            { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() });
-    raw_editor->title         = "raw view";
-    UITextEditor* text_editor = new UITextEditor();
-    text_editor->custom_r     = r2;
-    text_editor->data_source  = d;
-    raw_editor->child         = text_editor;
+    bool show_raw_editor         = true;
+    UIResizablePanel* raw_editor = new UIResizablePanel();
+    raw_editor->title            = "raw view";
+    UITextEditor* text_editor    = new UITextEditor();
+    text_editor->custom_r        = r2;
+    text_editor->data_source     = d;
+    raw_editor->child            = text_editor;
 
-    UIResizablePanel* preview_editor = new UIResizablePanel({ 64, 128 }, { 0, UIRootMenu::getHeight() },
-        { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() });
+    bool show_preview_editor         = true;
+    UIResizablePanel* preview_editor = new UIResizablePanel();
     preview_editor->title            = "rendered view";
 
+    bool show_palette        = true;
     UIButtonPalette* palette = new UIButtonPalette(1);
-    palette->position = { (w->getSize().x - palette->size.x) - 4.0f, UIRootMenu::getHeight() + 4.0f };
     for (int i = 0; i < 16; ++i) palette->addButton(i, [i]() { std::cout << i << std::endl; });
 
     UIRootMenu* root_menu = new UIRootMenu();
@@ -87,30 +86,73 @@ int main()
     UIMenu* scripts_menu = root_menu->addSubMenu("scripts");
     scripts_menu->addLabel("you have no scripts.", 7);
 
-    UIMenu* view_menu = root_menu->addSubMenu("view");
-    view_menu->addButton("show raw view", nullptr, "Alt+R");
-    view_menu->addButton("show metrics", nullptr, "Alt+M");
-    view_menu->addButton("show guides", nullptr, "Alt+G", 10);
-    view_menu->addDivider();
-    UIMenu* view_layouts  = view_menu->addSubMenu("reset layout", 15);
-    auto setDefaultLayout = [&]() -> void
+    UIMenu* view_menu        = root_menu->addSubMenu("view");
+    auto updateViewFlagIcons = [&]() -> void
     {
+        view_menu->setButtonIcon(0, show_palette ? 9 : -1);
+        view_menu->setButtonIcon(1, show_raw_editor ? 9 : -1);
+    };
+    view_menu->addButton(
+        "show palette",
+        [&]()
+        {
+            show_palette = !show_palette;
+            updateViewFlagIcons();
+        },
+        "Alt+P");
+    view_menu->addButton(
+        "show raw view",
+        [&]()
+        {
+            show_raw_editor = !show_raw_editor;
+            updateViewFlagIcons();
+        },
+        "Alt+R");
+    view_menu->addButton("show metrics", nullptr, "Alt+M");
+    view_menu->addButton("show guides", nullptr, "Alt+G");
+    updateViewFlagIcons();
+    view_menu->addDivider();
+    UIMenu* view_layouts     = view_menu->addSubMenu("reset layout", 15);
+    auto setSideBySideLayout = [&]() -> void
+    {
+        show_palette      = true;
+        palette->position = { (w->getSize().x - palette->size.x) - 4.0f, UIRootMenu::getHeight() + 4.0f };
+
+        show_raw_editor      = true;
         raw_editor->position = { w->getSize().x / 2.0f, UIRootMenu::getHeight() };
         raw_editor->size     = { (w->getSize().x / 2.0f) - (palette->size.x + 8.0f),
             w->getSize().y - UIRootMenu::getHeight() };
 
+        show_preview_editor      = true;
         preview_editor->position = { 0, UIRootMenu::getHeight() };
         preview_editor->size     = { w->getSize().x / 2.0f, w->getSize().y - UIRootMenu::getHeight() };
+        updateViewFlagIcons();
     };
-    view_layouts->addButton("side-by-side", setDefaultLayout);
-    view_layouts->addButton("top-to-bottom",
-        [&]()
-        {
-            preview_editor->position = { 0, UIRootMenu::getHeight() };
-            preview_editor->size     = { w->getSize().x, w->getSize().y / 2.0f };
+    auto setTopToBottomLayout = [&]() -> void
+    {
+        show_palette      = true;
+        palette->position = { (w->getSize().x - palette->size.x) - 4.0f, UIRootMenu::getHeight() + 4.0f };
 
-            raw_editor->position = { 0, UIRootMenu::getHeight() + w->getSize().y / 2.0f };
-            raw_editor->size     = { w->getSize().x, (w->getSize().y / 2.0f) - UIRootMenu::getHeight() };
+        show_preview_editor      = true;
+        preview_editor->position = { 0, UIRootMenu::getHeight() };
+        preview_editor->size     = { w->getSize().x, w->getSize().y / 2.0f };
+
+        show_raw_editor      = true;
+        raw_editor->position = { 0, UIRootMenu::getHeight() + w->getSize().y / 2.0f };
+        raw_editor->size     = { w->getSize().x, (w->getSize().y / 2.0f) - UIRootMenu::getHeight() };
+        updateViewFlagIcons();
+    };
+    view_layouts->addButton("side-by-side", setSideBySideLayout);
+    view_layouts->addButton("top-to-bottom", setTopToBottomLayout);
+    view_menu->addButton("swap layout",
+        [&]() -> void
+        {
+            glm::vec2 tmp            = raw_editor->position;
+            glm::vec2 tmp2           = raw_editor->size;
+            raw_editor->position     = preview_editor->position;
+            raw_editor->size         = preview_editor->size;
+            preview_editor->position = tmp;
+            preview_editor->size     = tmp2;
         });
 
     UIMenu* help_menu = root_menu->addSubMenu("help");
@@ -130,7 +172,7 @@ int main()
 
     root_menu->addButton("test", []() -> void { std::cout << "test" << std::endl; });
 
-    setDefaultLayout();
+    setSideBySideLayout();
 
     while (!w->shouldClose())
     {
@@ -151,14 +193,20 @@ int main()
         root_menu->checkInput(w);
         root_menu->draw(r, w->getSize().x);
 
-        palette->checkInput(w);
-        palette->draw(r);
+        if (show_palette)
+        {
+            palette->checkInput(w);
+            palette->draw(r);
+        }
 
         preview_editor->checkInput(w);
         preview_editor->draw(r);
 
-        raw_editor->checkInput(w);
-        raw_editor->draw(r);
+        if (show_raw_editor)
+        {
+            raw_editor->checkInput(w);
+            raw_editor->draw(r);
+        }
 
         consumeAllMouseEvents(w);
         r->finalise();

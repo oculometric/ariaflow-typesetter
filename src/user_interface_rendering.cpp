@@ -481,7 +481,7 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
             float subtract_amount_uv = (uv_size.y / char_size.y) * subtract_amount_px;
             bl.y -= subtract_amount_px;
             br.y -= subtract_amount_px;
-            uv_br.y += subtract_amount_uv;
+            uv_br.y -= subtract_amount_uv;
         }
 
         if (formatting.clip && tr.x > formatting.clip_bounds.x)

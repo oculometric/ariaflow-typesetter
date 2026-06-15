@@ -148,6 +148,7 @@ private:
         std::string text;
         std::string shortcut;
         bool is_clickable = false;
+        bool is_button    = false;
         bool is_divider   = false;
         bool is_submenu   = false;
         std::function<void(void)> callback;
@@ -174,6 +175,8 @@ public:
     void addLabel(const std::string& text, int icon = -1);
     void addDivider();
     UIMenu* addSubMenu(const std::string& text, int icon = -1);
+
+    void setButtonIcon(size_t index, int icon);
 
     void draw(UIRenderer* r, glm::vec2 top_left);
     bool checkInput(Window* w, glm::vec2 top_left);
@@ -393,9 +396,9 @@ private:
     glm::vec2 last_checked_size;
     bool needs_lines_update;
     bool needs_cursor_update;
-    float left_margin = 24.0f;
+    float left_margin  = 24.0f;
     float right_margin = 12.0f;
-    float scroll = 0.0f;
+    float scroll       = 0.0f;
 
 public:
     UITextEditor()                            = default;

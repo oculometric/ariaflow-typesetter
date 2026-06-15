@@ -21,6 +21,7 @@ void UIMenu::addButton(const std::string& text, std::function<void(void)> callba
     Item item;
     item.text         = text;
     item.is_clickable = true;
+    item.is_button    = true;
     item.icon         = icon;
     item.shortcut     = shortcut;
     item.callback     = callback;
@@ -57,6 +58,13 @@ UIMenu* UIMenu::addSubMenu(const std::string& text, int icon)
 
     items.push_back(item);
     return menu;
+}
+
+void UIMenu::setButtonIcon(size_t index, int icon)
+{
+    if (index >= items.size()) return;
+    if (!items[index].is_button) return;
+    items[index].icon = icon;
 }
 
 void UIMenu::draw(UIRenderer* r, glm::vec2 top_left)

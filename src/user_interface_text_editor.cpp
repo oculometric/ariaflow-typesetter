@@ -23,7 +23,8 @@ void UITextEditor::draw(std::shared_ptr<UIRenderer> _r)
         else
         {
             if (data_source->getData()[line.first - 1] == '\n') ++line_index;
-            else line_updated = false;
+            else
+                line_updated = false;
         }
 
         if (p.y >= position.y + size.y) break;
@@ -138,12 +139,14 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                 }
                 cursor_line = glm::min(cursor_line + 1, lines.size() - 1);
                 updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+                scrollCursorOnscreen();
             }
             if (evt2.key == KeyEvent::KEY_UP ||
                 (evt2.key == KeyEvent::KEY_KP_8 && !(evt2.modifiers & KeyEvent::NUM)))
             {
                 if (cursor_line > 0) --cursor_line;
                 updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+                scrollCursorOnscreen();
             }
             if (evt2.key == KeyEvent::KEY_RIGHT ||
                 (evt2.key == KeyEvent::KEY_KP_6 && !(evt2.modifiers & KeyEvent::NUM)))
@@ -165,6 +168,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                 else
                     ++cursor_column;
                 updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+                scrollCursorOnscreen();
             }
             if (evt2.key == KeyEvent::KEY_LEFT ||
                 (evt2.key == KeyEvent::KEY_KP_4 && !(evt2.modifiers & KeyEvent::NUM)))
@@ -186,6 +190,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                 else
                     cursor_column = effective_cursor_column - 1;
                 updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+                scrollCursorOnscreen();
             }
             if (evt2.key == KeyEvent::KEY_HOME ||
                 (evt2.key == KeyEvent::KEY_KP_7 && !(evt2.modifiers & KeyEvent::NUM)))
@@ -193,6 +198,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                 cursor_column = 0;
                 cursor_line   = 0;
                 updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+                scrollCursorOnscreen();
             }
             if (evt2.key == KeyEvent::KEY_END ||
                 (evt2.key == KeyEvent::KEY_KP_1 && !(evt2.modifiers & KeyEvent::NUM)))
@@ -208,8 +214,13 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                     cursor_column = lines[cursor_line].second;
                 }
                 updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+                scrollCursorOnscreen();
             }
-            if (evt2.key == KeyEvent::KEY_ESCAPE) { updateCursorIndex(false); }
+            if (evt2.key == KeyEvent::KEY_ESCAPE)
+            {
+                updateCursorIndex(false);
+                scrollCursorOnscreen();
+            }
             if (evt2.key == KeyEvent::KEY_BACKSPACE)
             {
                 if (cursor_index != selection_other_end_index) eraseSelection();
@@ -222,6 +233,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                     cursor_column = a;
                     cursor_line   = b;
                     updateCursorIndex(false);
+                    scrollCursorOnscreen();
                 }
             }
             if (evt2.key == KeyEvent::KEY_DELETE)
@@ -235,6 +247,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                     cursor_column = a;
                     cursor_line   = b;
                     updateCursorIndex(false);
+                    scrollCursorOnscreen();
                 }
             }
             if (evt2.key == KeyEvent::KEY_ENTER)
@@ -247,6 +260,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                 cursor_column = a;
                 cursor_line   = b;
                 updateCursorIndex(false);
+                scrollCursorOnscreen();
             }
             evt2 = w->getKeyEvent();
         }
@@ -318,6 +332,7 @@ void UITextEditor::eraseSelection()
     cursor_column = a;
     cursor_line   = b;
     updateCursorIndex(false);
+    scrollCursorOnscreen();
 }
 
 void UITextEditor::updateCursorIndex(bool keep_selection)

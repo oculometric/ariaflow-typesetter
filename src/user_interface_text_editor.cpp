@@ -105,6 +105,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
             cursor_column = a;
             cursor_line   = b;
             updateCursorIndex(false);
+            scrollCursorOnscreen();
             evt = w->getCharEvent();
         }
 
@@ -355,6 +356,17 @@ float UITextEditor::findIndexOffset(size_t index, size_t line_start)
 {
     float char_width = custom_r->calculateTextWidth("a", format);
     return (static_cast<float>(index - line_start) * (char_width + format.spacing)) - format.spacing;
+}
+
+void UITextEditor::scrollCursorOnscreen()
+{
+    size_t top_line    = static_cast<size_t>(scroll / line_height);
+    size_t bottom_line = static_cast<size_t>((scroll + size.y) / line_height);
+    if (cursor_line < top_line) { scroll -= line_height * static_cast<float>(top_line - cursor_line); }
+    else if (cursor_line >= bottom_line)
+    {
+        scroll += line_height * static_cast<float>((cursor_line - bottom_line) + 1);
+    }
 }
 
 float UITextEditor::getContentWidth() { return size.x - (left_margin + right_margin); }

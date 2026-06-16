@@ -15,23 +15,6 @@ void UITextEditor::draw(UIRenderer* _r)
     glm::vec2 p       = text_start;
     size_t line_index = 1;
 
-    auto findCursorOffset = [&](size_t col, size_t row) -> glm::vec2
-    {
-        size_t line_length = 0;
-        if (row < lines.size()) line_length = lines[row].second - lines[row].first;
-        size_t effective_cursor_column = glm::min(line_length, col);
-        float char_width               = custom_r->calculateTextWidth("a", format);
-        return glm::vec2{ (static_cast<float>(effective_cursor_column) * (char_width + format.spacing)) -
-                              format.spacing,
-            static_cast<float>(row) * line_height };
-    };
-
-    auto findIndexOffset = [&](size_t index, size_t line_start) -> float
-    {
-        float char_width = custom_r->calculateTextWidth("a", format);
-        return (static_cast<float>(index - line_start) * (char_width + format.spacing)) - format.spacing;
-    };
-
     for (const auto& line : lines)
     {
         if (p.y >= position.y + size.y) break;
@@ -244,6 +227,16 @@ void UITextEditor::checkInput(Window* w)
             }
             evt2 = w->getKeyEvent();
         }
+
+        if (w->isMouseDown(KeyEvent::MOUSE_LEFT))
+        {
+            auto [a, b]   = findCursorPlacement(mouse);
+            cursor_column = a;
+            cursor_line   = b;
+            updateCursorIndex(!checkForMouseDown(w));
+        }
+
+        w->setCursorType(CursorType::CURSOR_TEXT, 1);
     }
     float lines_tall = size.y / line_height;
     scroll           = glm::clamp(scroll, 0.0f,
@@ -317,6 +310,40 @@ void UITextEditor::updateCursorIndex(bool keep_selection)
         cursor_index = data_source->getData().size();
 
     if (!keep_selection) selection_other_end_index = cursor_index;
+}
+
+glm::vec2 UITextEditor::findCursorOffset(size_t col, size_t row)
+{
+    size_t line_length = 0;
+    if (row < lines.size()) line_length = lines[row].second - lines[row].first;
+    size_t effective_cursor_column = glm::min(line_length, col);
+    float char_width               = custom_r->calculateTextWidth("a", format);
+    return glm::vec2{ (static_cast<float>(effective_cursor_column) * (char_width + format.spacing)) -
+                          format.spacing,
+        static_cast<float>(row) * line_height };
+}
+
+std::pair<size_t, size_t> UITextEditor::findCursorPlacement(glm::vec2 offset)
+{
+    float char_width               = custom_r->calculateTextWidth("a", format);
+    const glm::vec2 text_start     = position + glm::vec2{ left_margin, (spacing * 2) - scroll };
+    glm::vec2 position_within_text = offset - text_start;
+    size_t line                    = static_cast<size_t>(glm::floor(position_within_text.y / line_height));
+    if (line >= lines.size() && !lines.empty() && (lines[lines.size() - 1].second - lines[lines.size() - 1].first) > 1)
+    {
+        data_source->getData().push_back('\n');
+        updateLines();
+    }
+    if (line >= lines.size()) line = lines.size() - 1;
+    size_t col = static_cast<float>(glm::max(0.0f,
+        glm::round((position_within_text.x + format.spacing) / (char_width + format.spacing))));
+    return { col, line };
+}
+
+float UITextEditor::findIndexOffset(size_t index, size_t line_start)
+{
+    float char_width = custom_r->calculateTextWidth("a", format);
+    return (static_cast<float>(index - line_start) * (char_width + format.spacing)) - format.spacing;
 }
 
 float UITextEditor::getContentWidth() { return size.x - (left_margin + right_margin); }

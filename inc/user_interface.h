@@ -425,6 +425,9 @@ private:
     std::pair<size_t, size_t> calculateColumnLineFromIndex(size_t index);
     void eraseSelection();
     void updateCursorIndex(bool keep_selection);
+    glm::vec2 findCursorOffset(size_t col, size_t row);
+    std::pair<size_t, size_t> findCursorPlacement(glm::vec2 offset);
+    float findIndexOffset(size_t index, size_t line_start);
     float getContentWidth();
 };
 

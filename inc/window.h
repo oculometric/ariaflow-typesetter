@@ -137,8 +137,8 @@ private:
     int last_cursor_priority  = 0;
     glm::vec2 last_frame_size;
     glm::vec2 current_frame_size;
-    float scroll_delta;
-    float scroll_delta_last;
+    float scroll_delta = 0.0f;
+    float scroll_delta_last = 0.0f;
     std::map<std::string, KeyEvent> shortcuts;
 
 public:

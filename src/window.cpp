@@ -16,7 +16,7 @@ static std::unordered_map<GLFWwindow*, Window*> windows;
 
 void Window::keyFunction(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    KeyEvent::Modifier modifiers;
+    KeyEvent::Modifier modifiers = KeyEvent::NONE;
     if (mods & GLFW_MOD_ALT) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::ALT);
     if (mods & GLFW_MOD_CAPS_LOCK) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::CAPS);
     if (mods & GLFW_MOD_CONTROL) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::CTRL);

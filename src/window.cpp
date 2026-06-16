@@ -236,3 +236,7 @@ bool Window::wasShortcutTriggered(const std::string& action)
     }
     return false;
 }
+
+void Window::writeClipboard(const std::string& value) { glfwSetClipboardString(window, value.c_str()); }
+
+std::string Window::readClipboard() { return glfwGetClipboardString(window); }

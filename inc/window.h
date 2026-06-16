@@ -168,6 +168,9 @@ public:
     void registerShortcut(const std::string& action, KeyEvent::Modifier modifiers, uint16_t key);
     bool wasShortcutTriggered(const std::string& action);
 
+    void writeClipboard(const std::string& value);
+    std::string readClipboard();
+
 private:
     static void keyFunction(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void charFunction(GLFWwindow* window, unsigned int codepoint);

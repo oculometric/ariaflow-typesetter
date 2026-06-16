@@ -289,10 +289,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
         {
             if (cursor_index < data_source->getData().size())
             {
-                size_t start = cursor_index;
-                size_t end   = cursor_index;
-                while (start > 0 && data_source->getData()[start - 1] != '\n') --start;
-                while (end < data_source->getData().size() && data_source->getData()[end] != '\n') ++end;
+                auto [start, end]         = collectParagraph(cursor_index);
                 selection_other_end_index = start;
                 cursor_index              = end;
                 auto [a, b]               = calculateColumnLineFromIndex(cursor_index);
@@ -300,6 +297,54 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                 cursor_line               = b;
                 updateCursorIndex(true);
             }
+        }
+        if (w->wasShortcutTriggered("copy"))
+        {
+            if (selection_other_end_index == cursor_index)
+            {
+                auto [start, end] = collectParagraph(cursor_index);
+                copy_buffer       = data_source->getData().substr(start, end - start) + '\n';
+                w->writeClipboard(copy_buffer);
+            }
+            else
+            {
+                size_t min  = glm::min(cursor_index, selection_other_end_index);
+                size_t max  = glm::max(cursor_index, selection_other_end_index);
+                copy_buffer = data_source->getData().substr(min, max - min);
+                w->writeClipboard(copy_buffer);
+            }
+        }
+        if (w->wasShortcutTriggered("cut"))
+        {
+            if (selection_other_end_index == cursor_index)
+            {
+                auto [start, end] = collectParagraph(cursor_index);
+                copy_buffer       = data_source->getData().substr(start, end - start) + '\n';
+                w->writeClipboard(copy_buffer);
+                cursor_index              = start;
+                selection_other_end_index = end + 1;
+                eraseSelection();
+            }
+            else
+            {
+                size_t min  = glm::min(cursor_index, selection_other_end_index);
+                size_t max  = glm::max(cursor_index, selection_other_end_index);
+                copy_buffer = data_source->getData().substr(min, max - min);
+                w->writeClipboard(copy_buffer);
+                eraseSelection();
+            }
+        }
+        if (w->wasShortcutTriggered("paste"))
+        {
+            eraseSelection();
+            copy_buffer = w->readClipboard();
+            data_source->getData().insert(cursor_index, copy_buffer);
+            cursor_index += copy_buffer.size();
+            updateLines();
+            auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+            cursor_column = a;
+            cursor_line   = b;
+            updateCursorIndex(false);
         }
     }
     float lines_tall = size.y / line_height;
@@ -402,6 +447,15 @@ std::pair<size_t, size_t> UITextEditor::findCursorPlacement(glm::vec2 offset)
     size_t col = static_cast<float>(glm::max(0.0f,
         glm::round((position_within_text.x + format.spacing) / (char_width + format.spacing))));
     return { col, line };
+}
+
+std::pair<size_t, size_t> UITextEditor::collectParagraph(size_t index)
+{
+    size_t start = cursor_index;
+    size_t end   = cursor_index;
+    while (start > 0 && data_source->getData()[start - 1] != '\n') --start;
+    while (end < data_source->getData().size() && data_source->getData()[end] != '\n') ++end;
+    return { start, end };
 }
 
 float UITextEditor::findIndexOffset(size_t index, size_t line_start)

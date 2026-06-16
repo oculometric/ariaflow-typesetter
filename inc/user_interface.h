@@ -407,6 +407,7 @@ private:
     float left_margin  = 24.0f;
     float right_margin = 12.0f;
     float scroll       = 0.0f;
+    std::string copy_buffer;
 
 public:
     UITextEditor()                            = default;
@@ -428,6 +429,7 @@ private:
     void updateCursorIndex(bool keep_selection);
     glm::vec2 findCursorOffset(size_t col, size_t row);
     std::pair<size_t, size_t> findCursorPlacement(glm::vec2 offset);
+    std::pair<size_t, size_t> collectParagraph(size_t index);
     float findIndexOffset(size_t index, size_t line_start);
     void scrollCursorOnscreen();
     float getContentWidth();

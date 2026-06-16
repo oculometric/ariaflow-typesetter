@@ -158,6 +158,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                     cursor_line = glm::min(cursor_line + 1, lines.size() - 1);
                     updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
                     scrollCursorOnscreen();
+                    if (evt2.modifiers & KeyEvent::ALT) scroll += line_height;
                 }
             }
             if (evt2.key == KeyEvent::KEY_UP ||
@@ -169,8 +170,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                     else
                     {
                         --cursor_index;
-                        while (cursor_index > 0 &&
-                               data_source->getData()[cursor_index - 1] != '\n')
+                        while (cursor_index > 0 && data_source->getData()[cursor_index - 1] != '\n')
                             --cursor_index;
                     }
                     auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
@@ -184,6 +184,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                     if (cursor_line > 0) --cursor_line;
                     updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
                     scrollCursorOnscreen();
+                    if (evt2.modifiers & KeyEvent::ALT) scroll -= line_height;
                 }
             }
             if (evt2.key == KeyEvent::KEY_RIGHT ||

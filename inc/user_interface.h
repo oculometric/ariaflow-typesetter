@@ -5,6 +5,7 @@
 #include <functional>
 #include <glm/glm.hpp>
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -128,7 +129,7 @@ public:
     float calculateTextWidth(const std::string& text, TextFormatting formatting);
     void setTransformation(glm::mat3 transform_matrix) { transform = transform_matrix; }
 
-    void draw(Window* window) const;
+    void draw(std::shared_ptr<Window> window) const;
 
 private:
     bool isBackingValid(const BackingData& backing_ref);
@@ -152,8 +153,8 @@ private:
         bool is_divider   = false;
         bool is_submenu   = false;
         std::function<void(void)> callback;
-        UIMenu* submenu = nullptr;
-        int icon        = -1;
+        std::shared_ptr<UIMenu> submenu;
+        int icon = -1;
         glm::vec2 position;
         glm::vec2 size;
         bool is_clicked = false;
@@ -174,12 +175,12 @@ public:
         const std::string& shortcut = "", int icon = -1);
     void addLabel(const std::string& text, int icon = -1);
     void addDivider();
-    UIMenu* addSubMenu(const std::string& text, int icon = -1);
+    std::shared_ptr<UIMenu> addSubMenu(const std::string& text, int icon = -1);
 
     void setButtonIcon(size_t index, int icon);
 
-    void draw(UIRenderer* r, glm::vec2 top_left);
-    bool checkInput(Window* w, glm::vec2 top_left);
+    void draw(std::shared_ptr<UIRenderer> r, glm::vec2 top_left);
+    bool checkInput(std::shared_ptr<Window> w, glm::vec2 top_left);
 };
 
 class UIRootMenu
@@ -191,8 +192,8 @@ private:
         bool is_clickable = false;
         bool is_submenu   = false;
         std::function<void(void)> callback;
-        UIMenu* submenu = nullptr;
-        int icon        = -1;
+        std::shared_ptr<UIMenu> submenu;
+        int icon = -1;
         glm::vec2 position;
         glm::vec2 size;
         bool is_clicked = false;
@@ -212,12 +213,12 @@ public:
 
     void addButton(const std::string& text, std::function<void(void)> callback, int icon = -1);
     void addLabel(const std::string& text, int icon = -1);
-    UIMenu* addSubMenu(const std::string& text, int icon = -1);
+    std::shared_ptr<UIMenu> addSubMenu(const std::string& text, int icon = -1);
 
     static float getHeight();
 
-    void draw(UIRenderer* r, float width);
-    void checkInput(Window* w);
+    void draw(std::shared_ptr<UIRenderer> r, float width);
+    void checkInput(std::shared_ptr<Window> w);
 };
 
 class UIElement
@@ -236,8 +237,8 @@ public:
     void operator=(UIElement&& other)      = delete;
     virtual ~UIElement() {};
 
-    virtual void draw(UIRenderer* r) {};
-    virtual void checkInput(Window* w) {};
+    virtual void draw(std::shared_ptr<UIRenderer> r) {};
+    virtual void checkInput(std::shared_ptr<Window> w) {};
 };
 
 class UIButton : public UIElement
@@ -261,10 +262,10 @@ public:
     void operator=(UIButton&& other)      = delete;
     ~UIButton() override {};
 
-    glm::vec2 getSize(UIRenderer* r);
+    glm::vec2 getSize(std::shared_ptr<UIRenderer> r);
 
-    void draw(UIRenderer* r) override;
-    void checkInput(Window* w) override;
+    void draw(std::shared_ptr<UIRenderer> r) override;
+    void checkInput(std::shared_ptr<Window> w) override;
 };
 
 class UILabel : public UIElement
@@ -284,7 +285,7 @@ public:
     void operator=(UILabel&& other)      = delete;
     ~UILabel() override {};
 
-    void draw(UIRenderer* r) override;
+    void draw(std::shared_ptr<UIRenderer> r) override;
 };
 
 class UIPanel : public UIElement
@@ -303,7 +304,7 @@ public:
     void operator=(UIPanel&& other)      = delete;
     ~UIPanel() override {};
 
-    void draw(UIRenderer* r) override;
+    void draw(std::shared_ptr<UIRenderer> r) override;
 };
 
 class UIGrabbable : public UIElement
@@ -324,7 +325,7 @@ public:
 
     bool isCurrentlyGrabbed() const { return grabbed; }
 
-    glm::vec2 checkInput(Window* w, glm::vec2 position, glm::vec2 area_size);
+    glm::vec2 checkInput(std::shared_ptr<Window> w, glm::vec2 position, glm::vec2 area_size);
 };
 
 class UIButtonPalette : public UIElement
@@ -333,8 +334,8 @@ public:
     int columns = 2;
 
 private:
-    std::array<UIGrabbable*, 3> grabbables;
-    std::vector<UIButton*> buttons;
+    std::array<std::unique_ptr<UIGrabbable>, 3> grabbables;
+    std::vector<std::shared_ptr<UIButton>> buttons;
     glm::vec2 button_size;
 
 public:
@@ -345,10 +346,10 @@ public:
     void operator=(UIButtonPalette&& other)       = delete;
     ~UIButtonPalette() override;
 
-    UIButton* addButton(int icon, std::function<void(void)> callback);
+    std::shared_ptr<UIButton> addButton(int icon, std::function<void(void)> callback);
 
-    void draw(UIRenderer* r) override;
-    void checkInput(Window* w) override;
+    void draw(std::shared_ptr<UIRenderer> r) override;
+    void checkInput(std::shared_ptr<Window> w) override;
 
 private:
     glm::vec2 recalculateSize();
@@ -359,7 +360,7 @@ class UIResizablePanel : public UIElement
 {
 public:
     glm::vec2 minimum_size;
-    UIElement* child  = nullptr;
+    std::shared_ptr<UIElement> child;
     std::string title = "???";
     int button_a_icon = 0;
     std::function<void(void)> button_a_callback;
@@ -367,7 +368,7 @@ public:
     std::function<void(void)> button_b_callback;
 
 private:
-    std::array<UIGrabbable*, 9> grabbables;
+    std::array<std::unique_ptr<UIGrabbable>, 9> grabbables;
     bool button_a_down = false;
     bool button_b_down = false;
 
@@ -380,8 +381,8 @@ public:
     void operator=(UIResizablePanel&& other)        = delete;
     ~UIResizablePanel() override;
 
-    void draw(UIRenderer* r) override;
-    void checkInput(Window* w) override;
+    void draw(std::shared_ptr<UIRenderer> r) override;
+    void checkInput(std::shared_ptr<Window> w) override;
     void calculateContentArea(glm::vec2& offset, glm::vec2& dimension);
 };
 
@@ -390,8 +391,8 @@ class Document;
 class UITextEditor : public UIElement
 {
 public:
-    Document* data_source;
-    UIRenderer* custom_r = nullptr;
+    std::shared_ptr<Document> data_source;
+    std::shared_ptr<UIRenderer> custom_r;
 
 private:
     std::string text;
@@ -417,8 +418,8 @@ public:
 
     glm::ivec2 getCursorPos() const { return { cursor_line + 1, cursor_column + 1 }; }
 
-    void draw(UIRenderer* r) override;
-    void checkInput(Window* w) override;
+    void draw(std::shared_ptr<UIRenderer> r) override;
+    void checkInput(std::shared_ptr<Window> w) override;
 
 private:
     void updateLines();
@@ -432,11 +433,11 @@ private:
 };
 
 bool insideRect(glm::vec2 point, glm::vec2 top_left, glm::vec2 size);
-bool checkForMouseDown(Window* w);
-bool checkForMouseUp(Window* w);
-void consumeAllMouseEvents(Window* w);
-void trackWindowResizeFixedSize(Window* w, glm::vec2& top_left, glm::vec2 size);
-void trackWindowResizeScaleSize(Window* w, glm::vec2& top_left, glm::vec2& size);
+bool checkForMouseDown(std::shared_ptr<Window> w);
+bool checkForMouseUp(std::shared_ptr<Window> w);
+void consumeAllMouseEvents(std::shared_ptr<Window> w);
+void trackWindowResizeFixedSize(std::shared_ptr<Window> w, glm::vec2& top_left, glm::vec2 size);
+void trackWindowResizeScaleSize(std::shared_ptr<Window> w, glm::vec2& top_left, glm::vec2& size);
 
 const float line_height          = 24.0f;
 const float icon_size            = 24.0f;

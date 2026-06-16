@@ -5,7 +5,7 @@ using namespace AriaFlow;
 
 const TextFormatting format{ TEXT_ALIGN_LEFT, TEXT_FLAGS_NONE, true, false, false, {}, 1, 23 };
 
-void UITextEditor::draw(UIRenderer* _r)
+void UITextEditor::draw(std::shared_ptr<UIRenderer> _r)
 {
     TextFormatting format2     = format;
     format2.align              = TEXT_ALIGN_RIGHT;
@@ -73,7 +73,7 @@ void UITextEditor::draw(UIRenderer* _r)
         { 2, line_height + (spacing * 2.0f) }, 0, glm::vec4{ text_colour, 1 }, 0b0000);
 }
 
-void UITextEditor::checkInput(Window* w)
+void UITextEditor::checkInput(std::shared_ptr<Window> w)
 {
     if (size != last_checked_size && custom_r)
     {

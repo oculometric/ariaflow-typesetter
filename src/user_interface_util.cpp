@@ -13,7 +13,7 @@ bool AriaFlow::insideRect(glm::vec2 point, glm::vec2 top_left, glm::vec2 size)
     return true;
 }
 
-bool AriaFlow::checkForMouseDown(Window* w)
+bool AriaFlow::checkForMouseDown(std::shared_ptr<Window> w)
 {
     auto evt = w->getMouseEvent();
     while (evt.key != 0)
@@ -24,7 +24,7 @@ bool AriaFlow::checkForMouseDown(Window* w)
     return false;
 }
 
-bool AriaFlow::checkForMouseUp(Window* w)
+bool AriaFlow::checkForMouseUp(std::shared_ptr<Window> w)
 {
     auto evt = w->getMouseEvent();
     while (evt.key != 0)
@@ -35,13 +35,13 @@ bool AriaFlow::checkForMouseUp(Window* w)
     return false;
 }
 
-void AriaFlow::consumeAllMouseEvents(Window* w)
+void AriaFlow::consumeAllMouseEvents(std::shared_ptr<Window> w)
 {
     auto evt = w->getMouseEvent();
     while (evt.key != 0) evt = w->getMouseEvent();
 }
 
-void AriaFlow::trackWindowResizeFixedSize(Window* w, glm::vec2& top_left, glm::vec2 size)
+void AriaFlow::trackWindowResizeFixedSize(std::shared_ptr<Window> w, glm::vec2& top_left, glm::vec2 size)
 {
     glm::vec2 old_window_size = w->getLastSize();
     glm::vec2 new_window_size = w->getSize();
@@ -62,7 +62,7 @@ void AriaFlow::trackWindowResizeFixedSize(Window* w, glm::vec2& top_left, glm::v
         top_left.y += (new_window_size - old_window_size).y;
 }
 
-void AriaFlow::trackWindowResizeScaleSize(Window* w, glm::vec2& top_left, glm::vec2& size)
+void AriaFlow::trackWindowResizeScaleSize(std::shared_ptr<Window> w, glm::vec2& top_left, glm::vec2& size)
 {
     glm::vec2 old_window_size = w->getLastSize();
     glm::vec2 new_window_size = w->getSize();

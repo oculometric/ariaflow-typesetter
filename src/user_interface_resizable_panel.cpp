@@ -8,23 +8,20 @@ UIResizablePanel::UIResizablePanel(glm::vec2 min_size, glm::vec2 offset, glm::ve
     minimum_size  = min_size;
     position      = offset;
     size          = dimensions;
-    grabbables[0] = new UIGrabbable(CURSOR_HAND);
-    grabbables[1] = new UIGrabbable(CURSOR_RESIZE_HORIZONTAL);
-    grabbables[2] = new UIGrabbable(CURSOR_RESIZE_HORIZONTAL);
-    grabbables[3] = new UIGrabbable(CURSOR_RESIZE_VERTICAL);
-    grabbables[4] = new UIGrabbable(CURSOR_RESIZE_VERTICAL);
-    grabbables[5] = new UIGrabbable(CURSOR_RESIZE_TLBR);
-    grabbables[6] = new UIGrabbable(CURSOR_RESIZE_BLTR);
-    grabbables[7] = new UIGrabbable(CURSOR_RESIZE_BLTR);
-    grabbables[8] = new UIGrabbable(CURSOR_RESIZE_TLBR);
+    grabbables[0] = std::make_unique<UIGrabbable>(CURSOR_HAND);
+    grabbables[1] = std::make_unique<UIGrabbable>(CURSOR_RESIZE_HORIZONTAL);
+    grabbables[2] = std::make_unique<UIGrabbable>(CURSOR_RESIZE_HORIZONTAL);
+    grabbables[3] = std::make_unique<UIGrabbable>(CURSOR_RESIZE_VERTICAL);
+    grabbables[4] = std::make_unique<UIGrabbable>(CURSOR_RESIZE_VERTICAL);
+    grabbables[5] = std::make_unique<UIGrabbable>(CURSOR_RESIZE_TLBR);
+    grabbables[6] = std::make_unique<UIGrabbable>(CURSOR_RESIZE_BLTR);
+    grabbables[7] = std::make_unique<UIGrabbable>(CURSOR_RESIZE_BLTR);
+    grabbables[8] = std::make_unique<UIGrabbable>(CURSOR_RESIZE_TLBR);
 }
 
-UIResizablePanel::~UIResizablePanel()
-{
-    for (auto g : grabbables) delete g;
-}
+UIResizablePanel::~UIResizablePanel() {}
 
-void UIResizablePanel::draw(UIRenderer* r)
+void UIResizablePanel::draw(std::shared_ptr<UIRenderer> r)
 {
     glm::vec2 panel_position = glm::round(position);
     glm::vec2 panel_size     = glm::round(size);
@@ -71,7 +68,7 @@ void UIResizablePanel::draw(UIRenderer* r)
         r->addNineSlice(content_position, z, content_size, 3, { 0.01f, 0.01f, 0.01f, 1.0f }, 0b1111);
 }
 
-void UIResizablePanel::checkInput(Window* w)
+void UIResizablePanel::checkInput(std::shared_ptr<Window> w)
 {
     trackWindowResizeScaleSize(w, position, size);
 

@@ -11,7 +11,7 @@ UIButton::UIButton(const std::string& text, std::function<void(void)> callback, 
     position      = offset;
 }
 
-glm::vec2 UIButton::getSize(UIRenderer* r)
+glm::vec2 UIButton::getSize(std::shared_ptr<UIRenderer> r)
 {
     float width = 0;
     if (icon_index != -1) width += icon_size + (spacing * 2);
@@ -27,7 +27,7 @@ glm::vec2 UIButton::getSize(UIRenderer* r)
     return size;
 }
 
-void UIButton::draw(UIRenderer* r)
+void UIButton::draw(std::shared_ptr<UIRenderer> r)
 {
     r->addNineSlice(position, z, getSize(r), (is_pressed && mouse_inside) ? 2 : 0, panel_colour, 0b1111);
     glm::vec2 pos = position + glm::vec2{ spacing, spacing };
@@ -39,7 +39,7 @@ void UIButton::draw(UIRenderer* r)
     if (!message.empty()) r->addText(pos + glm::vec2{ 0, text_push }, z, {}, message, text_colour);
 }
 
-void UIButton::checkInput(Window* w)
+void UIButton::checkInput(std::shared_ptr<Window> w)
 {
     mouse_inside = insideRect(w->getMousePosition(), position, size);
     if (!is_pressed && mouse_inside && checkForMouseDown(w)) is_pressed = true;
@@ -62,7 +62,7 @@ UILabel::UILabel(const std::string& text, TextAlign align, TextFlags flags, int 
     position   = offset;
 }
 
-void UILabel::draw(UIRenderer* r)
+void UILabel::draw(std::shared_ptr<UIRenderer> r)
 {
     glm::vec2 pos = position;
     if (direction == TEXT_ALIGN_RIGHT) pos -= icon_size;
@@ -85,7 +85,7 @@ UIPanel::UIPanel(glm::vec4 fill, int layer, uint8_t borders, glm::vec2 offset, g
     border_flags = borders;
 }
 
-void UIPanel::draw(UIRenderer* r)
+void UIPanel::draw(std::shared_ptr<UIRenderer> r)
 { r->addNineSlice(position, z, size, layer_index, fill_colour, border_flags); }
 
 UIGrabbable::UIGrabbable(CursorType cursor_indicator) : UIElement({ 0, 0 }, { 0, 0 })
@@ -94,7 +94,7 @@ UIGrabbable::UIGrabbable(CursorType cursor_indicator) : UIElement({ 0, 0 }, { 0,
     cursor  = cursor_indicator;
 }
 
-glm::vec2 UIGrabbable::checkInput(Window* w, glm::vec2 position, glm::vec2 area_size)
+glm::vec2 UIGrabbable::checkInput(std::shared_ptr<Window> w, glm::vec2 position, glm::vec2 area_size)
 {
     bool inside = insideRect(w->getMousePosition(), position, area_size);
     if (inside && !grabbed)

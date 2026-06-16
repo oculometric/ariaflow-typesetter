@@ -394,7 +394,7 @@ void UIRenderer::finalise()
     index_count = static_cast<int>(final_indices.size());
 }
 
-void UIRenderer::draw(Window* window) const
+void UIRenderer::draw(std::shared_ptr<Window> window) const
 {
     window->makeCurrentContext();
 

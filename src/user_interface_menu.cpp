@@ -8,12 +8,7 @@ const float text_push_menu = 1.0f;
 
 UIMenu::UIMenu() { overall_size = { 16, spacing * 2 }; }
 
-UIMenu::~UIMenu()
-{
-    for (auto& item : items)
-        if (item.submenu) delete item.submenu;
-    items.clear();
-}
+UIMenu::~UIMenu() { items.clear(); }
 
 void UIMenu::addButton(const std::string& text, std::function<void(void)> callback,
     const std::string& shortcut, int icon)
@@ -46,9 +41,9 @@ void UIMenu::addDivider()
     items.push_back(item);
 }
 
-UIMenu* UIMenu::addSubMenu(const std::string& text, int icon)
+std::shared_ptr<UIMenu> UIMenu::addSubMenu(const std::string& text, int icon)
 {
-    UIMenu* menu = new UIMenu();
+    std::shared_ptr<UIMenu> menu = std::make_shared<UIMenu>();
     Item item;
     item.is_submenu   = true;
     item.submenu      = menu;
@@ -67,7 +62,7 @@ void UIMenu::setButtonIcon(size_t index, int icon)
     items[index].icon = icon;
 }
 
-void UIMenu::draw(UIRenderer* r, glm::vec2 top_left)
+void UIMenu::draw(std::shared_ptr<UIRenderer> r, glm::vec2 top_left)
 {
     float left     = top_left.x + (spacing * 2);
     float top      = top_left.y + spacing + text_push_menu;
@@ -133,7 +128,7 @@ void UIMenu::draw(UIRenderer* r, glm::vec2 top_left)
     r->addNineSlice(top_left, 15, size, 0, panel_colour, 0b1111);
 }
 
-bool UIMenu::checkInput(Window* w, glm::vec2 top_left)
+bool UIMenu::checkInput(std::shared_ptr<Window> w, glm::vec2 top_left)
 {
     glm::vec2 mouse  = w->getMousePosition();
     bool down        = w->isMouseDown(KeyEvent::MOUSE_LEFT);
@@ -171,12 +166,7 @@ bool UIMenu::checkInput(Window* w, glm::vec2 top_left)
 
 UIRootMenu::UIRootMenu() {}
 
-UIRootMenu::~UIRootMenu()
-{
-    for (auto& item : items)
-        if (item.submenu) delete item.submenu;
-    items.clear();
-}
+UIRootMenu::~UIRootMenu() { items.clear(); }
 
 void UIRootMenu::addButton(const std::string& text, std::function<void(void)> callback, int icon)
 {
@@ -198,9 +188,9 @@ void UIRootMenu::addLabel(const std::string& text, int icon)
     items.push_back(item);
 }
 
-UIMenu* UIRootMenu::addSubMenu(const std::string& text, int icon)
+std::shared_ptr<UIMenu> UIRootMenu::addSubMenu(const std::string& text, int icon)
 {
-    UIMenu* menu = new UIMenu();
+    std::shared_ptr<UIMenu> menu = std::make_shared<UIMenu>();
     Item item;
     item.is_submenu   = true;
     item.submenu      = menu;
@@ -214,7 +204,7 @@ UIMenu* UIRootMenu::addSubMenu(const std::string& text, int icon)
 
 float UIRootMenu::getHeight() { return line_height + (spacing * 2); }
 
-void UIRootMenu::draw(UIRenderer* r, float width)
+void UIRootMenu::draw(std::shared_ptr<UIRenderer> r, float width)
 {
     float bottom = getHeight();
     r->addNineSlice({ 0, 0 }, 16, { width, bottom }, 0, panel_colour, 0b0010);
@@ -243,7 +233,7 @@ void UIRootMenu::draw(UIRenderer* r, float width)
     }
 }
 
-void UIRootMenu::checkInput(Window* w)
+void UIRootMenu::checkInput(std::shared_ptr<Window> w)
 {
     float bottom     = getHeight();
     glm::vec2 mouse  = w->getMousePosition();

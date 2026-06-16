@@ -10,26 +10,22 @@ UIButtonPalette::UIButtonPalette(int button_columns, glm::vec2 offset)
     button_size      = button->getSize(nullptr);
     delete button;
     size          = recalculateSize();
-    grabbables[0] = new UIGrabbable(CURSOR_HAND);
-    grabbables[1] = new UIGrabbable(CURSOR_RESIZE_HORIZONTAL);
-    grabbables[2] = new UIGrabbable(CURSOR_RESIZE_HORIZONTAL);
+    grabbables[0] = std::make_unique<UIGrabbable>(CURSOR_HAND);
+    grabbables[1] = std::make_unique<UIGrabbable>(CURSOR_RESIZE_HORIZONTAL);
+    grabbables[2] = std::make_unique<UIGrabbable>(CURSOR_RESIZE_HORIZONTAL);
 }
 
-UIButtonPalette::~UIButtonPalette()
-{
-    for (auto g : grabbables) delete g;
-    for (auto b : buttons) delete b;
-}
+UIButtonPalette::~UIButtonPalette() {}
 
-UIButton* UIButtonPalette::addButton(int icon, std::function<void(void)> callback)
+std::shared_ptr<UIButton> UIButtonPalette::addButton(int icon, std::function<void(void)> callback)
 {
-    UIButton* b = new UIButton("", callback, icon);
+    std::shared_ptr<UIButton> b = std::make_shared<UIButton>("", callback, icon);
+    b->z                        = 8.2f;
     buttons.push_back(b);
-    b->z = 8.2f;
     return b;
 }
 
-void UIButtonPalette::draw(UIRenderer* r)
+void UIButtonPalette::draw(std::shared_ptr<UIRenderer> r)
 {
     glm::vec2 panel_position   = glm::round(position);
     glm::vec2 panel_size       = glm::round(size);
@@ -39,7 +35,7 @@ void UIButtonPalette::draw(UIRenderer* r)
 
     int col      = 0;
     float height = 0;
-    for (auto button : buttons)
+    for (auto& button : buttons)
     {
         button->position = content_position + glm::vec2{ button_size.x * col, height };
         button->draw(r);
@@ -51,7 +47,7 @@ void UIButtonPalette::draw(UIRenderer* r)
         { medium_border, medium_border }, 1, { 0, 0 }, { 1, 1 });
 }
 
-void UIButtonPalette::checkInput(Window* w)
+void UIButtonPalette::checkInput(std::shared_ptr<Window> w)
 {
     trackWindowResizeFixedSize(w, position, size);
 

@@ -133,20 +133,58 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
             if (evt2.key == KeyEvent::KEY_DOWN ||
                 (evt2.key == KeyEvent::KEY_KP_2 && !(evt2.modifiers & KeyEvent::NUM)))
             {
-                if (cursor_line == lines.size() - 1 && !lines.empty())
+                if (evt2.modifiers & KeyEvent::CTRL)
                 {
-                    cursor_column = lines[cursor_line].second;
+                    if (cursor_index == data_source->getData().size()) {}
+                    else
+                    {
+                        ++cursor_index;
+                        while (cursor_index < data_source->getData().size() &&
+                               data_source->getData()[cursor_index - 1] != '\n')
+                            ++cursor_index;
+                    }
+                    auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+                    cursor_column = a;
+                    cursor_line   = b;
+                    updateCursorIndex(false);
+                    scrollCursorOnscreen();
                 }
-                cursor_line = glm::min(cursor_line + 1, lines.size() - 1);
-                updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
-                scrollCursorOnscreen();
+                else
+                {
+                    if (cursor_line == lines.size() - 1 && !lines.empty())
+                    {
+                        cursor_column = lines[cursor_line].second;
+                    }
+                    cursor_line = glm::min(cursor_line + 1, lines.size() - 1);
+                    updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+                    scrollCursorOnscreen();
+                }
             }
             if (evt2.key == KeyEvent::KEY_UP ||
                 (evt2.key == KeyEvent::KEY_KP_8 && !(evt2.modifiers & KeyEvent::NUM)))
             {
-                if (cursor_line > 0) --cursor_line;
-                updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
-                scrollCursorOnscreen();
+                if (evt2.modifiers & KeyEvent::CTRL)
+                {
+                    if (cursor_index == data_source->getData().size()) {}
+                    else
+                    {
+                        --cursor_index;
+                        while (cursor_index > 0 &&
+                               data_source->getData()[cursor_index - 1] != '\n')
+                            --cursor_index;
+                    }
+                    auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+                    cursor_column = a;
+                    cursor_line   = b;
+                    updateCursorIndex(false);
+                    scrollCursorOnscreen();
+                }
+                else
+                {
+                    if (cursor_line > 0) --cursor_line;
+                    updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+                    scrollCursorOnscreen();
+                }
             }
             if (evt2.key == KeyEvent::KEY_RIGHT ||
                 (evt2.key == KeyEvent::KEY_KP_6 && !(evt2.modifiers & KeyEvent::NUM)))

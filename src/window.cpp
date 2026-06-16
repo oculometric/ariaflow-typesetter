@@ -50,6 +50,9 @@ void Window::mouseFunction(GLFWwindow* window, int button, int action, int mods)
         KeyEvent{ but, action == GLFW_PRESS, action == GLFW_REPEAT, modifiers });
 }
 
+void Window::scrollFunction(GLFWwindow* window, double xoffset, double yoffset)
+{ windows[window]->scroll_delta += static_cast<float>(yoffset); }
+
 Window::Window()
 {
     if (windows.empty())
@@ -76,6 +79,7 @@ Window::Window()
     glfwSetKeyCallback(window, keyFunction);
     glfwSetCharCallback(window, charFunction);
     glfwSetMouseButtonCallback(window, mouseFunction);
+    glfwSetScrollCallback(window, scrollFunction);
     cursors[CURSOR_NORMAL]            = nullptr;
     cursors[CURSOR_RESIZE_HORIZONTAL] = glfwCreateStandardCursor(GLFW_RESIZE_EW_CURSOR);
     cursors[CURSOR_RESIZE_VERTICAL]   = glfwCreateStandardCursor(GLFW_RESIZE_NS_CURSOR);
@@ -181,6 +185,8 @@ void Window::poll()
     glm::vec2 mouse_position = { mouse_x, mouse_y };
     mouse_delta              = mouse_position - last_mouse_position;
     last_mouse_position      = mouse_position;
+    scroll_delta_last        = scroll_delta;
+    scroll_delta             = 0.0f;
 }
 
 void Window::present() const

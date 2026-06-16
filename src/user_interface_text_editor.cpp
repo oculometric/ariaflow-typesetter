@@ -237,12 +237,12 @@ void UITextEditor::checkInput(Window* w)
         }
 
         w->setCursorType(CursorType::CURSOR_TEXT, 1);
+
+        scroll -= w->getScrollDelta() * line_height;
     }
     float lines_tall = size.y / line_height;
     scroll           = glm::clamp(scroll, 0.0f,
         line_height * glm::max(static_cast<float>(lines.size()) - glm::max(lines_tall - 8.0f, 1.0f), 0.0f));
-
-    // TODO: mouse navigation, scrolling
 }
 
 void UITextEditor::updateLines()
@@ -329,7 +329,8 @@ std::pair<size_t, size_t> UITextEditor::findCursorPlacement(glm::vec2 offset)
     const glm::vec2 text_start     = position + glm::vec2{ left_margin, (spacing * 2) - scroll };
     glm::vec2 position_within_text = offset - text_start;
     size_t line                    = static_cast<size_t>(glm::floor(position_within_text.y / line_height));
-    if (line >= lines.size() && !lines.empty() && (lines[lines.size() - 1].second - lines[lines.size() - 1].first) > 1)
+    if (line >= lines.size() && !lines.empty() &&
+        (lines[lines.size() - 1].second - lines[lines.size() - 1].first) > 1)
     {
         data_source->getData().push_back('\n');
         updateLines();

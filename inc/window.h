@@ -136,6 +136,8 @@ private:
     int last_cursor_priority  = 0;
     glm::vec2 last_frame_size;
     glm::vec2 current_frame_size;
+    float scroll_delta;
+    float scroll_delta_last;
 
 public:
     Window();
@@ -153,6 +155,7 @@ public:
     KeyEvent getMouseEvent();
     glm::vec2 getMousePosition() const;
     glm::vec2 getMouseDelta() const;
+    float getScrollDelta() const { return scroll_delta_last; }
     bool isMouseDown(KeyEvent::Key mouse_button) const;
     void poll();
     void present() const;
@@ -165,6 +168,7 @@ private:
     static void keyFunction(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void charFunction(GLFWwindow* window, unsigned int codepoint);
     static void mouseFunction(GLFWwindow* window, int button, int action, int mods);
+    static void scrollFunction(GLFWwindow* window, double xoffset, double yoffset);
 };
 
 }; // namespace AriaFlow

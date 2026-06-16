@@ -211,7 +211,6 @@ int main()
 
         if (show_raw_editor)
         {
-            // TODO: palette and resizable panels need a close button on them!
             raw_editor->checkInput(w);
             raw_editor->draw(r);
         }

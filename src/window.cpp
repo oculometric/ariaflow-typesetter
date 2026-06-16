@@ -25,6 +25,15 @@ void Window::keyFunction(GLFWwindow* window, int key, int scancode, int action, 
     if (mods & GLFW_MOD_SUPER) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::SUPER);
     windows[window]->key_events.push(
         KeyEvent{ static_cast<uint16_t>(key), action == GLFW_PRESS, action == GLFW_REPEAT, modifiers });
+
+    if (action == GLFW_PRESS)
+    {
+        for (auto& pair : windows[window]->shortcuts)
+        {
+            if (pair.second.key == static_cast<uint16_t>(key) && pair.second.modifiers == modifiers)
+                pair.second.pressed = true;
+        }
+    }
 }
 
 void Window::charFunction(GLFWwindow* window, unsigned int codepoint)
@@ -212,4 +221,18 @@ void Window::setCursorType(CursorType t, int priority)
         current_cursor       = t;
         last_cursor_priority = priority;
     }
+}
+
+void Window::registerShortcut(const std::string& action, KeyEvent::Modifier modifiers, uint16_t key)
+{ shortcuts[action] = KeyEvent{ key, false, false, modifiers }; }
+
+bool Window::wasShortcutTriggered(const std::string& action)
+{
+    if (!shortcuts.contains(action)) return false;
+    if (shortcuts[action].pressed)
+    {
+        shortcuts[action].pressed = false;
+        return true;
+    }
+    return false;
 }

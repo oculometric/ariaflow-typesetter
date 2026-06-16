@@ -276,6 +276,15 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
         w->setCursorType(CursorType::CURSOR_TEXT, 1);
 
         scroll -= w->getScrollDelta() * line_height;
+
+        if (w->wasShortcutTriggered("select_all"))
+        {
+            cursor_index  = data_source->getData().size();
+            auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+            cursor_column = a;
+            cursor_line   = b;
+            selection_other_end_index = 0;
+        }
     }
     float lines_tall = size.y / line_height;
     scroll           = glm::clamp(scroll, 0.0f,

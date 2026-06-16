@@ -17,6 +17,8 @@ Application::Application()
 
     setSideBySideLayout();
     updateViewIcons();
+
+    w->registerShortcut("select_all", KeyEvent::CTRL, 'A');
 }
 
 void Application::run()
@@ -115,6 +117,8 @@ void Application::initMenus()
         edit_menu->addButton("select all", nullptr, "Ctrl+A");
         edit_menu->addButton("select paragraph", nullptr, "Ctrl+Shft+A");
         edit_menu->addDivider();
+        edit_menu->addButton("format", nullptr, "Alt+Shft+F");
+        edit_menu->addDivider();
         edit_menu->addButton("settings", nullptr, "Ctrl+,");
     }
 
@@ -189,8 +193,8 @@ void Application::initEditors()
     raw_editor                    = std::make_shared<UIResizablePanel>();
     raw_editor->title             = "raw view";
     raw_editor->child             = text_editor;
-    raw_editor->button_b_icon     = 0;
-    raw_editor->button_a_icon     = 2;
+    raw_editor->button_a_icon     = 0;
+    raw_editor->button_b_icon     = 2;
     raw_editor->button_a_callback = [&]()
     {
         show_raw_editor = !show_raw_editor;

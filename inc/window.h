@@ -4,6 +4,7 @@
 #include <glm/vec2.hpp>
 #include <queue>
 #include <string>
+#include <map>
 
 struct GLFWwindow;
 struct GLFWcursor;
@@ -138,6 +139,7 @@ private:
     glm::vec2 current_frame_size;
     float scroll_delta;
     float scroll_delta_last;
+    std::map<std::string, KeyEvent> shortcuts;
 
 public:
     Window();
@@ -163,6 +165,8 @@ public:
     void makeCurrentContext() const;
 
     void setCursorType(CursorType t, int priority = 0);
+    void registerShortcut(const std::string& action, KeyEvent::Modifier modifiers, uint16_t key);
+    bool wasShortcutTriggered(const std::string& action);
 
 private:
     static void keyFunction(GLFWwindow* window, int key, int scancode, int action, int mods);

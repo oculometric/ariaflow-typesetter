@@ -129,6 +129,7 @@ void UIResizablePanel::checkInput(std::shared_ptr<Window> w)
             grabbables[3]->checkInput(w, grab_pos, glm::vec2{ size.x - (small_border * 2), small_border });
         change = top_grab.y - grab_pos.y;
         change = size.y - glm::clamp(size.y - change, minimum_size.y, max_size.y);
+        change = glm::clamp(position.y + change, UIRootMenu::getHeight(), 1000000.0f) - position.y;
         change_size.y += change;
         change_position.y += change;
 
@@ -142,6 +143,7 @@ void UIResizablePanel::checkInput(std::shared_ptr<Window> w)
         glm::vec2 tl_grab = grabbables[5]->checkInput(w, grab_pos, glm::vec2{ small_border, small_border });
         glm::vec2 change2 = tl_grab - grab_pos;
         change2           = size - glm::clamp(size - change2, minimum_size, max_size);
+        change2.y = glm::clamp(position.y + change2.y, UIRootMenu::getHeight(), 1000000.0f) - position.y;
         change_size += change2;
         change_position += change2;
 
@@ -149,6 +151,7 @@ void UIResizablePanel::checkInput(std::shared_ptr<Window> w)
         glm::vec2 tr_grab = grabbables[6]->checkInput(w, grab_pos, glm::vec2{ small_border, small_border });
         change2           = tr_grab - grab_pos;
         change2.y         = size.y - glm::clamp(size.y - change2.y, minimum_size.y, max_size.y);
+        change2.y = glm::clamp(position.y + change2.y, UIRootMenu::getHeight(), 1000000.0f) - position.y;
         change_size += change2 * glm::vec2{ -1, 1 };
         change_position.y += change2.y;
 

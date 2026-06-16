@@ -68,9 +68,19 @@ void UITextEditor::draw(std::shared_ptr<UIRenderer> _r)
         ++line_index;
     }
 
-    glm::vec2 cursor_offset = findCursorOffset(cursor_column, cursor_line);
-    custom_r->addNineSlice(text_start + cursor_offset - glm::vec2{ 1, (spacing * 2) }, z + 0.1f,
-        { 2, line_height + (spacing * 2.0f) }, 0, glm::vec4{ text_colour, 1 }, 0b0000);
+    // cursor
+    {
+        glm::vec2 cursor_offset       = findCursorOffset(cursor_column, cursor_line);
+        glm::vec2 cursor_top_left     = text_start + cursor_offset - glm::vec2{ 1, (spacing * 2) };
+        glm::vec2 cursor_bottom_right = cursor_top_left + glm::vec2{ 2, line_height + (spacing * 2.0f) };
+        if (cursor_bottom_right.y > position.y && cursor_top_left.y < position.y + size.y)
+        {
+            cursor_top_left.y     = glm::max(cursor_top_left.y, position.y);
+            cursor_bottom_right.y = glm::min(cursor_bottom_right.y, position.y + size.y);
+            custom_r->addNineSlice(cursor_top_left, z + 0.1f, cursor_bottom_right - cursor_top_left, 0,
+                glm::vec4{ text_colour, 1 }, 0b0000);
+        }
+    }
 }
 
 void UITextEditor::checkInput(std::shared_ptr<Window> w)

@@ -24,7 +24,7 @@ void Window::keyFunction(GLFWwindow* window, int key, int scancode, int action, 
     if (mods & GLFW_MOD_SHIFT) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::SHIFT);
     if (mods & GLFW_MOD_SUPER) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::SUPER);
     windows[window]->key_events.push(
-        KeyEvent{ static_cast<uint16_t>(key), action == GLFW_PRESS, modifiers });
+        KeyEvent{ static_cast<uint16_t>(key), action == GLFW_PRESS, action == GLFW_REPEAT, modifiers });
 }
 
 void Window::charFunction(GLFWwindow* window, unsigned int codepoint)
@@ -46,7 +46,8 @@ void Window::mouseFunction(GLFWwindow* window, int button, int action, int mods)
     case GLFW_MOUSE_BUTTON_RIGHT:  but = KeyEvent::MOUSE_RIGHT; break;
     case GLFW_MOUSE_BUTTON_MIDDLE: but = KeyEvent::MOUSE_MIDDLE; break;
     }
-    windows[window]->mouse_events.push(KeyEvent{ but, action == GLFW_PRESS, modifiers });
+    windows[window]->mouse_events.push(
+        KeyEvent{ but, action == GLFW_PRESS, action == GLFW_REPEAT, modifiers });
 }
 
 Window::Window()
@@ -71,6 +72,7 @@ Window::Window()
     makeCurrentContext();
     glfwFocusWindow(window);
     glfwShowWindow(window);
+    glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
     glfwSetKeyCallback(window, keyFunction);
     glfwSetCharCallback(window, charFunction);
     glfwSetMouseButtonCallback(window, mouseFunction);

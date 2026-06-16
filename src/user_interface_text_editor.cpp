@@ -14,6 +14,24 @@ void UITextEditor::draw(UIRenderer* _r)
 
     glm::vec2 p       = text_start;
     size_t line_index = 1;
+
+    auto findCursorOffset = [&](size_t col, size_t row) -> glm::vec2
+    {
+        size_t line_length = 0;
+        if (row < lines.size()) line_length = lines[row].second - lines[row].first;
+        size_t effective_cursor_column = glm::min(line_length, col);
+        float char_width               = custom_r->calculateTextWidth("a", format);
+        return glm::vec2{ (static_cast<float>(effective_cursor_column) * (char_width + format.spacing)) -
+                              format.spacing,
+            static_cast<float>(row) * line_height };
+    };
+
+    auto findIndexOffset = [&](size_t index, size_t line_start) -> float
+    {
+        float char_width = custom_r->calculateTextWidth("a", format);
+        return (static_cast<float>(index - line_start) * (char_width + format.spacing)) - format.spacing;
+    };
+
     for (const auto& line : lines)
     {
         if (p.y >= position.y + size.y) break;
@@ -23,27 +41,51 @@ void UITextEditor::draw(UIRenderer* _r)
             ++line_index;
             continue;
         }
-        TextFormatting format3 = format2;
-        format3.clip           = true;
-        format3.clip_bounds    = { 100000.0f, (position.y + size.y) - p.y };
-        custom_r->addText(p - glm::vec2{ (spacing * 2), 0 }, z, format3, std::to_string(line_index),
-            text_sec_colour);
-        format3             = format;
-        format3.clip        = true;
-        format3.clip_bounds = { 100000.0f, (position.y + size.y) - p.y };
-        custom_r->addText(p, z, format3,
-            data_source->getData().substr(line.first, line.second - line.first), text_colour);
+        // line number
+        {
+            TextFormatting format3 = format2;
+            format3.clip           = true;
+            format3.clip_bounds    = { 100000.0f, (position.y + size.y) - p.y };
+            custom_r->addText(p - glm::vec2{ (spacing * 2), 0 }, z, format3, std::to_string(line_index),
+                text_sec_colour);
+        }
+        // text content
+        {
+            TextFormatting format3 = format;
+            format3.clip           = true;
+            format3.clip_bounds    = { 100000.0f, (position.y + size.y) - p.y };
+            custom_r->addText(p, z, format3,
+                data_source->getData().substr(line.first, line.second - line.first), text_colour);
+        }
+        // selection highlight
+        {
+            size_t min = glm::min(cursor_index, selection_other_end_index);
+            size_t max = glm::max(cursor_index, selection_other_end_index);
+
+            if (max >= line.first && min <= line.second)
+            {
+                size_t hmin  = glm::max(min, line.first);
+                size_t hmax  = glm::min(max, line.second);
+                float height = line_height;
+                if (max > line.second) ++hmax;
+                if (hmin != hmax)
+                {
+                    float char_width = custom_r->calculateTextWidth("a", format);
+                    custom_r->addNineSlice(p + glm::vec2{ findIndexOffset(hmin, line.first) - 1, -spacing },
+                        z + 0.1f,
+                        glm::vec2{ (findIndexOffset(hmax, line.first) - findIndexOffset(hmin, line.first)) +
+                                       2,
+                            height },
+                        0, glm::vec4{ 0.8f, 0.8f, 0.8f, 0.2f }, 0b0000);
+                }
+            }
+        }
+
         p.y += line_height;
         ++line_index;
     }
 
-    size_t line_length = 0;
-    if (cursor_line < lines.size()) line_length = lines[cursor_line].second - lines[cursor_line].first;
-    size_t effective_cursor_column = glm::min(line_length, cursor_column);
-    float char_width               = custom_r->calculateTextWidth("a", format);
-    glm::vec2 cursor_offset =
-        glm::vec2{ static_cast<float>(effective_cursor_column) * (char_width + format.spacing),
-            static_cast<float>(cursor_line) * line_height };
+    glm::vec2 cursor_offset = findCursorOffset(cursor_column, cursor_line);
     custom_r->addNineSlice(text_start + cursor_offset - glm::vec2{ 1, (spacing * 2) }, z + 0.1f,
         { 2, line_height + (spacing * 2.0f) }, 0, glm::vec4{ text_colour, 1 }, 0b0000);
 }
@@ -62,24 +104,43 @@ void UITextEditor::checkInput(Window* w)
         auto evt = w->getCharEvent();
         while (evt != 0)
         {
-            if (evt == 'P') scroll += 8.0f;
-            else if (evt == 'O')
-                scroll -= 8.0f;
+            eraseSelection();
+            data_source->getData().insert(data_source->getData().begin() + cursor_index, (char)evt);
+            ++cursor_index;
+            updateLines();
+            auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+            cursor_column = a;
+            cursor_line   = b;
+            updateCursorIndex(false);
             evt = w->getCharEvent();
         }
 
         auto evt2 = w->getKeyEvent();
         while (evt2.key != 0)
         {
-            if (evt2.pressed && evt2.key == KeyEvent::KEY_DOWN)
+            if (!(evt2.pressed || evt2.repeat))
             {
-                cursor_line = glm::min(cursor_line + 1, lines.size());
+                evt2 = w->getKeyEvent();
+                continue;
             }
-            if (evt2.pressed && evt2.key == KeyEvent::KEY_UP)
+            if (evt2.key == KeyEvent::KEY_DOWN ||
+                (evt2.key == KeyEvent::KEY_KP_2 && !(evt2.modifiers & KeyEvent::NUM)))
+            {
+                if (cursor_line == lines.size() - 1 && !lines.empty())
+                {
+                    cursor_column = lines[cursor_line].second;
+                }
+                cursor_line = glm::min(cursor_line + 1, lines.size() - 1);
+                updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+            }
+            if (evt2.key == KeyEvent::KEY_UP ||
+                (evt2.key == KeyEvent::KEY_KP_8 && !(evt2.modifiers & KeyEvent::NUM)))
             {
                 if (cursor_line > 0) --cursor_line;
+                updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
             }
-            if (evt2.pressed && evt2.key == KeyEvent::KEY_RIGHT)
+            if (evt2.key == KeyEvent::KEY_RIGHT ||
+                (evt2.key == KeyEvent::KEY_KP_6 && !(evt2.modifiers & KeyEvent::NUM)))
             {
                 size_t line_length = 0;
                 if (cursor_line < lines.size())
@@ -87,7 +148,7 @@ void UITextEditor::checkInput(Window* w)
                 size_t effective_cursor_column = glm::min(line_length, cursor_column);
                 if (effective_cursor_column == line_length)
                 {
-                    if (cursor_line < lines.size())
+                    if (cursor_line < lines.size() - 1)
                     {
                         ++cursor_line;
                         cursor_column = 0;
@@ -97,8 +158,10 @@ void UITextEditor::checkInput(Window* w)
                 }
                 else
                     ++cursor_column;
+                updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
             }
-            if (evt2.pressed && evt2.key == KeyEvent::KEY_LEFT)
+            if (evt2.key == KeyEvent::KEY_LEFT ||
+                (evt2.key == KeyEvent::KEY_KP_4 && !(evt2.modifiers & KeyEvent::NUM)))
             {
                 size_t line_length = 0;
                 if (cursor_line < lines.size())
@@ -116,6 +179,68 @@ void UITextEditor::checkInput(Window* w)
                 }
                 else
                     cursor_column = effective_cursor_column - 1;
+                updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+            }
+            if (evt2.key == KeyEvent::KEY_HOME ||
+                (evt2.key == KeyEvent::KEY_KP_7 && !(evt2.modifiers & KeyEvent::NUM)))
+            {
+                cursor_column = 0;
+                cursor_line   = 0;
+                updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+            }
+            if (evt2.key == KeyEvent::KEY_END ||
+                (evt2.key == KeyEvent::KEY_KP_1 && !(evt2.modifiers & KeyEvent::NUM)))
+            {
+                if (lines.empty())
+                {
+                    cursor_line   = 0;
+                    cursor_column = 0;
+                }
+                else
+                {
+                    cursor_line   = lines.size() - 1;
+                    cursor_column = lines[cursor_line].second;
+                }
+                updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+            }
+            if (evt2.key == KeyEvent::KEY_ESCAPE) { updateCursorIndex(false); }
+            if (evt2.key == KeyEvent::KEY_BACKSPACE)
+            {
+                if (cursor_index != selection_other_end_index) eraseSelection();
+                else if (cursor_index > 0)
+                {
+                    data_source->getData().erase(data_source->getData().begin() + cursor_index - 1);
+                    --cursor_index;
+                    updateLines();
+                    auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+                    cursor_column = a;
+                    cursor_line   = b;
+                    updateCursorIndex(false);
+                }
+            }
+            if (evt2.key == KeyEvent::KEY_DELETE)
+            {
+                if (cursor_index != selection_other_end_index) eraseSelection();
+                else if (cursor_index < data_source->getData().size())
+                {
+                    data_source->getData().erase(data_source->getData().begin() + cursor_index);
+                    updateLines();
+                    auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+                    cursor_column = a;
+                    cursor_line   = b;
+                    updateCursorIndex(false);
+                }
+            }
+            if (evt2.key == KeyEvent::KEY_ENTER)
+            {
+                eraseSelection();
+                data_source->getData().insert(data_source->getData().begin() + cursor_index, '\n');
+                ++cursor_index;
+                updateLines();
+                auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+                cursor_column = a;
+                cursor_line   = b;
+                updateCursorIndex(false);
             }
             evt2 = w->getKeyEvent();
         }
@@ -123,8 +248,8 @@ void UITextEditor::checkInput(Window* w)
     float lines_tall = size.y / line_height;
     scroll           = glm::clamp(scroll, 0.0f,
         line_height * glm::max(static_cast<float>(lines.size()) - glm::max(lines_tall - 8.0f, 1.0f), 0.0f));
-    // TODO: text editor input handling (big)
-    // TODO: keyboard navigation, mouse navigation, key inputs, selection
+
+    // TODO: mouse navigation, selection
 }
 
 void UITextEditor::updateLines()
@@ -144,13 +269,54 @@ void UITextEditor::updateLines()
         }
         lines = data_source->splitToLines(chars_per_line);
     }
-    updateCursor();
 }
 
-void UITextEditor::updateCursor()
+std::pair<size_t, size_t> UITextEditor::calculateColumnLineFromIndex(size_t index)
 {
-    // TODO: clamp cursor index
-    // TODO: clamp cursor line
+    for (size_t l = 0; l < lines.size(); ++l)
+    {
+        auto line = lines[l];
+        if (l + 1 < lines.size())
+        {
+            auto next_line = lines[l + 1];
+            if (index >= line.first && index < line.second) { return { index - line.first, l }; }
+            else if (index == line.second && index < next_line.first) { return { index - line.first, l }; }
+        }
+        else
+        {
+            if (index >= line.first && index <= line.second) { return { index - line.first, l }; }
+        }
+    }
+    return { 0, lines.size() - 1 };
+}
+
+void UITextEditor::eraseSelection()
+{
+    if (cursor_index == selection_other_end_index) return;
+    size_t min = glm::min(cursor_index, selection_other_end_index);
+    size_t max = glm::max(cursor_index, selection_other_end_index);
+    data_source->getData().erase(min, max - min);
+    cursor_index = min;
+    updateLines();
+    auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+    cursor_column = a;
+    cursor_line   = b;
+    updateCursorIndex(false);
+}
+
+void UITextEditor::updateCursorIndex(bool keep_selection)
+{
+    if (cursor_line < lines.size())
+    {
+        size_t line_length             = lines[cursor_line].second - lines[cursor_line].first;
+        size_t line_start              = lines[cursor_line].first;
+        size_t effective_cursor_column = glm::min(line_length, cursor_column);
+        cursor_index                   = line_start + effective_cursor_column;
+    }
+    else
+        cursor_index = data_source->getData().size();
+
+    if (!keep_selection) selection_other_end_index = cursor_index;
 }
 
 float UITextEditor::getContentWidth() { return size.x - (left_margin + right_margin); }

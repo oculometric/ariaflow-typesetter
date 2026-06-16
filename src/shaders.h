@@ -149,9 +149,9 @@ void main()
         vec4 tex_colour = texture(slice_atlas, (ns_uv + ns_off) / 2.0f);
 
         vec4 target_colour = (tex_colour.rgb == vec3(1.0f, 0.0f, 1.0f)) ? colour_1 : (tex_colour * colour_2);
-        if (target_colour.a < 0.5f)
+        if (target_colour.a < 0.1f)
             discard;
-        frag_colour = vec4(target_colour.rgb, 1.0f);
+        frag_colour = target_colour;
     }
     else if (draw_mode == 2)    // icon mode
     {
@@ -164,9 +164,9 @@ void main()
         vec4 tex_colour = texture(icon_atlas, (ic_uv + ic_off) / 8.0f);
 
         vec4 target_colour = (tex_colour.a > 0.5f) ? (tex_colour * colour_1) : colour_2;
-        if (target_colour.a < 0.5f)
+        if (target_colour.a < 0.1f)
             discard;
-        frag_colour = vec4(target_colour.rgb, 1.0f);
+        frag_colour = target_colour;
     }
     else if (draw_mode == 3)    // line mode
     {

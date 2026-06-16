@@ -390,9 +390,10 @@ public:
 private:
     std::string text;
     std::vector<std::pair<size_t, size_t>> lines;
-    size_t cursor_index  = 0;
-    size_t cursor_line   = 0;
-    size_t cursor_column = 0;
+    size_t cursor_index              = 0;
+    size_t cursor_line               = 0;
+    size_t cursor_column             = 0;
+    size_t selection_other_end_index = 0;
     glm::vec2 last_checked_size;
     bool needs_lines_update;
     bool needs_cursor_update;
@@ -415,7 +416,9 @@ public:
 
 private:
     void updateLines();
-    void updateCursor();
+    std::pair<size_t, size_t> calculateColumnLineFromIndex(size_t index);
+    void eraseSelection();
+    void updateCursorIndex(bool keep_selection);
     float getContentWidth();
 };
 

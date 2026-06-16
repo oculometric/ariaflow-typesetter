@@ -104,6 +104,7 @@ struct KeyEvent
 
     uint16_t key       = 0;
     bool pressed       = false;
+    bool repeat        = false;
     Modifier modifiers = NONE;
 };
 

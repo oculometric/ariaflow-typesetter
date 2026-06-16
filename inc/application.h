@@ -47,6 +47,10 @@ private:
     bool show_palette;
     std::shared_ptr<UIButtonPalette> palette;
 
+    // modal panels
+    bool is_modal = false;
+    std::shared_ptr<UIResizablePanel> dialog_prompt;
+
 public:
     Application();
     void run();

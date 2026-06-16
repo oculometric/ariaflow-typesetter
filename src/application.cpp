@@ -15,6 +15,8 @@ Application::Application()
     initEditors();
     initTools();
 
+    dialog_prompt = std::make_shared<UIResizablePanel>(glm::vec2{ 400, 200 });
+
     setSideBySideLayout();
     updateViewIcons();
 }
@@ -40,7 +42,7 @@ void Application::run()
         edit_menu->setButtonDisabled(undo_button, !d->hasUndoStepsAvailable());
         edit_menu->setButtonDisabled(redo_button, !d->hasRedoStepsAvailable());
 
-        root_menu->checkInput(w);
+        if (!is_modal) root_menu->checkInput(w);
         root_menu->draw(r, w->getSize().x);
 
         if (show_palette)
@@ -49,16 +51,32 @@ void Application::run()
             palette->draw(r);
         }
 
-        preview_editor->checkInput(w);
+        if (!is_modal) preview_editor->checkInput(w);
         preview_editor->draw(r);
 
         if (show_raw_editor)
         {
-            raw_editor->checkInput(w);
+            if (!is_modal) raw_editor->checkInput(w);
             raw_editor->draw(r);
         }
 
+        if (is_modal)
+        {
+            dialog_prompt->title         = "TEST TITLE";
+            dialog_prompt->button_a_icon = -1;
+            dialog_prompt->button_b_icon = -1;
+            dialog_prompt->z = 8.0f;
+            dialog_prompt->size          = { 400, 200 };
+            dialog_prompt->position      = (glm::vec2(w->getSize()) - dialog_prompt->size) / 2.0f;
+            dialog_prompt->checkInput(w);
+            dialog_prompt->size     = { 400, 200 };
+            dialog_prompt->position = (glm::vec2(w->getSize()) - dialog_prompt->size) / 2.0f;
+            dialog_prompt->draw(r);
+        }
+
         consumeAllMouseEvents(w);
+        // consumeAllKeyEvents(w);
+        // consumeAllCharEvents(w);
         r->finalise();
         r2->finalise();
     }
@@ -87,8 +105,12 @@ void Application::initMenus()
             "new",
             [&]() -> void
             {
-                d                        = std::make_shared<Document>();
-                text_editor->data_source = d;
+                if (d->hasUnsavedChanges()) { is_modal = true; }
+                else
+                {
+                    d                        = std::make_shared<Document>();
+                    text_editor->data_source = d;
+                }
             },
             "Ctrl+N");
         file_menu->addButton("open...", []() -> void { std::cout << "open" << std::endl; }, "Ctrl+O", 14);

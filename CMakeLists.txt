@@ -21,7 +21,7 @@ target_include_directories(ariaflow PRIVATE ${CMAKE_SOURCE_DIR}/inc)
 target_include_directories(ariaflow PRIVATE ${CMAKE_SOURCE_DIR}/lib)
 
 set_property(GLOBAL PROPERTY LINKER_LANGUAGE CXX)
-set_property(TARGET PROPERTY CXX_STANDARD 20)
+set_property(TARGET ariaflow PROPERTY CXX_STANDARD 20)
 if(WIN32)
 	set(CMAKE_C_COMPILER "cl.exe")
 	set(CMAKE_CXX_COMPILER "cl.exe")

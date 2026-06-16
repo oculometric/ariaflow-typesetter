@@ -175,7 +175,7 @@ void Window::poll()
     last_frame_size = current_frame_size;
     int x, y;
     glfwGetFramebufferSize(window, &x, &y);
-    current_frame_size = { x, y };
+    if (x > 2 && y > 2) current_frame_size = { x, y };
     double mouse_x, mouse_y;
     glfwGetCursorPos(window, &mouse_x, &mouse_y);
     glm::vec2 mouse_position = { mouse_x, mouse_y };

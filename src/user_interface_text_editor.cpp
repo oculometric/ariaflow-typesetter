@@ -249,7 +249,7 @@ void UITextEditor::checkInput(Window* w)
     scroll           = glm::clamp(scroll, 0.0f,
         line_height * glm::max(static_cast<float>(lines.size()) - glm::max(lines_tall - 8.0f, 1.0f), 0.0f));
 
-    // TODO: mouse navigation, selection
+    // TODO: mouse navigation, scrolling
 }
 
 void UITextEditor::updateLines()

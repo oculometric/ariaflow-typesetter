@@ -89,6 +89,10 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
     {
         last_checked_size = size;
         updateLines();
+        auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+        cursor_column = a;
+        cursor_line   = b;
+        updateCursorIndex(true);
     }
 
     glm::vec2 mouse = w->getMousePosition();

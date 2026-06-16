@@ -151,46 +151,70 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
             if (evt2.key == KeyEvent::KEY_RIGHT ||
                 (evt2.key == KeyEvent::KEY_KP_6 && !(evt2.modifiers & KeyEvent::NUM)))
             {
-                size_t line_length = 0;
-                if (cursor_line < lines.size())
-                    line_length = lines[cursor_line].second - lines[cursor_line].first;
-                size_t effective_cursor_column = glm::min(line_length, cursor_column);
-                if (effective_cursor_column == line_length)
+                if (evt2.modifiers & KeyEvent::CTRL)
                 {
-                    if (cursor_line < lines.size() - 1)
-                    {
-                        ++cursor_line;
-                        cursor_column = 0;
-                    }
-                    else
-                        cursor_column = effective_cursor_column;
+                    cursor_index  = data_source->findNextWord(cursor_index);
+                    auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+                    cursor_column = a;
+                    cursor_line   = b;
+                    updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+                    scrollCursorOnscreen();
                 }
                 else
-                    ++cursor_column;
-                updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
-                scrollCursorOnscreen();
+                {
+                    size_t line_length = 0;
+                    if (cursor_line < lines.size())
+                        line_length = lines[cursor_line].second - lines[cursor_line].first;
+                    size_t effective_cursor_column = glm::min(line_length, cursor_column);
+                    if (effective_cursor_column == line_length)
+                    {
+                        if (cursor_line < lines.size() - 1)
+                        {
+                            ++cursor_line;
+                            cursor_column = 0;
+                        }
+                        else
+                            cursor_column = effective_cursor_column;
+                    }
+                    else
+                        ++cursor_column;
+                    updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+                    scrollCursorOnscreen();
+                }
             }
             if (evt2.key == KeyEvent::KEY_LEFT ||
                 (evt2.key == KeyEvent::KEY_KP_4 && !(evt2.modifiers & KeyEvent::NUM)))
             {
-                size_t line_length = 0;
-                if (cursor_line < lines.size())
-                    line_length = lines[cursor_line].second - lines[cursor_line].first;
-                size_t effective_cursor_column = glm::min(line_length, cursor_column);
-                if (effective_cursor_column == 0)
+                if (evt2.modifiers & KeyEvent::CTRL)
                 {
-                    if (cursor_line > 0)
-                    {
-                        --cursor_line;
-                        cursor_column = lines[cursor_line].second - lines[cursor_line].first;
-                    }
-                    else
-                        cursor_column = effective_cursor_column;
+                    cursor_index  = data_source->findPrevWord(cursor_index);
+                    auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+                    cursor_column = a;
+                    cursor_line   = b;
+                    updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+                    scrollCursorOnscreen();
                 }
                 else
-                    cursor_column = effective_cursor_column - 1;
-                updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
-                scrollCursorOnscreen();
+                {
+                    size_t line_length = 0;
+                    if (cursor_line < lines.size())
+                        line_length = lines[cursor_line].second - lines[cursor_line].first;
+                    size_t effective_cursor_column = glm::min(line_length, cursor_column);
+                    if (effective_cursor_column == 0)
+                    {
+                        if (cursor_line > 0)
+                        {
+                            --cursor_line;
+                            cursor_column = lines[cursor_line].second - lines[cursor_line].first;
+                        }
+                        else
+                            cursor_column = effective_cursor_column;
+                    }
+                    else
+                        cursor_column = effective_cursor_column - 1;
+                    updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
+                    scrollCursorOnscreen();
+                }
             }
             if (evt2.key == KeyEvent::KEY_HOME ||
                 (evt2.key == KeyEvent::KEY_KP_7 && !(evt2.modifiers & KeyEvent::NUM)))

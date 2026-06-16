@@ -36,6 +36,12 @@ public:
     std::vector<std::pair<size_t, size_t>> splitToLines(size_t chars_per_line) const;
     std::vector<uint32_t> parse() const;
     void format();
+
+    size_t findNextWord(size_t current) const;
+    size_t findPrevWord(size_t current) const;
+
+private:
+    int getCharacterType(size_t index) const;
 };
 
 } // namespace AriaFlow

@@ -30,7 +30,9 @@ void Window::keyFunction(GLFWwindow* window, int key, int scancode, int action, 
     {
         for (auto& pair : windows[window]->shortcuts)
         {
-            if (pair.second.key == static_cast<uint16_t>(key) && pair.second.modifiers == modifiers)
+            if (pair.second.key == static_cast<uint16_t>(key) &&
+                pair.second.modifiers == (modifiers &
+                    (KeyEvent::ALT | KeyEvent::CTRL | KeyEvent::SHIFT | KeyEvent::SUPER)))
                 pair.second.pressed = true;
         }
     }

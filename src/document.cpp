@@ -164,5 +164,65 @@ std::vector<std::pair<size_t, size_t>> Document::splitToLines(size_t chars_per_l
     lines.emplace_back(line_start, current);
 
     return lines;
-    // TODO: split lines
+}
+
+int Document::getCharacterType(size_t index) const
+{
+    char c = data[index];
+    if (c >= 'a' && c <= 'z') return 0;
+    if (c >= 'A' && c <= 'Z') return 0;
+    if (c >= '0' && c <= '9') return 0;
+    if (c == '@') return 0;
+    if (c == ' ' || c == '\t' || c == '\n') return 1;
+    return 2;
+}
+
+size_t Document::findNextWord(size_t current) const
+{
+    size_t initial   = current;
+    int current_type = getCharacterType(current);
+    while ((current < data.size()) &&
+           ((getCharacterType(current) == current_type) || (getCharacterType(current) == 1)))
+    {
+        if (getCharacterType(current) == 1) current_type = 1;
+        if (!(initial == current) && current + 1 < data.size() && data[current] == '\n' &&
+            data[current + 1] == '\n')
+            break;
+        else if (initial == current && data[current] == '\n')
+        {
+            ++current;
+            break;
+        }
+        ++current;
+    }
+    return current;
+}
+
+size_t Document::findPrevWord(size_t current) const
+{
+    if (current <= 1) return 0;
+
+    size_t initial   = current;
+    int current_type = getCharacterType(current);
+    if (getCharacterType(current - 1) != getCharacterType(current) && getCharacterType(current - 1) != 1)
+    {
+        --current;
+        current_type = getCharacterType(current);
+    }
+    else if (getCharacterType(current - 1) == 1)
+        --current;
+    while (current > 0)
+    {
+        if (getCharacterType(current - 1) != current_type && getCharacterType(current) != 1)
+        {
+            if (current + 1 < data.size() && data[current + 1] == '\n')
+                ++current;
+            break;
+        }
+        if (!(initial == current) && data[current] == '\n' &&
+            data[current - 1] == '\n')
+            break;
+        --current;
+    }
+    return current;
 }

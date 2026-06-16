@@ -13,18 +13,27 @@ void UITextEditor::draw(std::shared_ptr<UIRenderer> _r)
     const glm::vec2 text_start = position + glm::vec2{ left_margin, (spacing * 2) - scroll };
 
     glm::vec2 p       = text_start;
-    size_t line_index = 1;
+    size_t line_index = 0;
+    bool line_updated = true;
 
     for (const auto& line : lines)
     {
+        line_updated = true;
+        if (line_index == 0) ++line_index;
+        else
+        {
+            if (data_source->getData()[line.first - 1] == '\n') ++line_index;
+            else line_updated = false;
+        }
+
         if (p.y >= position.y + size.y) break;
         if (p.y <= position.y)
         {
             p.y += line_height;
-            ++line_index;
             continue;
         }
         // line number
+        if (line_updated)
         {
             TextFormatting format3 = format2;
             format3.clip           = true;
@@ -65,7 +74,6 @@ void UITextEditor::draw(std::shared_ptr<UIRenderer> _r)
         }
 
         p.y += line_height;
-        ++line_index;
     }
 
     // cursor

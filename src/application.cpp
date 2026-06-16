@@ -17,8 +17,6 @@ Application::Application()
 
     setSideBySideLayout();
     updateViewIcons();
-
-    w->registerShortcut("select_all", KeyEvent::CTRL, 'A');
 }
 
 void Application::run()
@@ -108,18 +106,28 @@ void Application::initMenus()
     {
         edit_menu = root_menu->addSubMenu("edit");
         edit_menu->addButton("copy", nullptr, "Ctrl+C");
+        w->registerShortcut("copy", KeyEvent::CTRL, 'C');
         edit_menu->addButton("cut", nullptr, "Ctrl+X");
+        w->registerShortcut("cut", KeyEvent::CTRL, 'X');
         edit_menu->addButton("paste", nullptr, "Ctrl+V");
+        w->registerShortcut("paste", KeyEvent::CTRL, 'V');
         edit_menu->addDivider();
         edit_menu->addButton("undo", nullptr, "Ctrl+Z");
+        w->registerShortcut("undo", KeyEvent::CTRL, 'Z');
         edit_menu->addButton("redo", nullptr, "Ctrl+Shft+Z");
+        w->registerShortcut("redo", (KeyEvent::Modifier)(KeyEvent::CTRL | KeyEvent::SHIFT), 'Z');
         edit_menu->addDivider();
         edit_menu->addButton("select all", nullptr, "Ctrl+A");
+        w->registerShortcut("select_all", KeyEvent::CTRL, 'A');
         edit_menu->addButton("select paragraph", nullptr, "Ctrl+Shft+A");
+        w->registerShortcut("select_paragraph", (KeyEvent::Modifier)(KeyEvent::CTRL | KeyEvent::SHIFT),
+            'A');
         edit_menu->addDivider();
         edit_menu->addButton("format", nullptr, "Alt+Shft+F");
+        w->registerShortcut("format", (KeyEvent::Modifier)(KeyEvent::ALT | KeyEvent::SHIFT), 'F');
         edit_menu->addDivider();
         edit_menu->addButton("settings", nullptr, "Ctrl+,");
+        w->registerShortcut("settings", KeyEvent::CTRL, ',');
     }
 
     {
@@ -146,7 +154,9 @@ void Application::initMenus()
             },
             "Alt+R");
         view_menu->addButton("show metrics", nullptr, "Alt+M");
+        w->registerShortcut("toggle_metrics", KeyEvent::ALT, 'M');
         view_menu->addButton("show guides", nullptr, "Alt+G");
+        w->registerShortcut("toggle_guides", KeyEvent::ALT, 'G');
         view_menu->addDivider();
         std::shared_ptr<UIMenu> view_layouts = view_menu->addSubMenu("reset layout", 15);
         view_layouts->addButton("side-by-side", [&]() { setSideBySideLayout(); });

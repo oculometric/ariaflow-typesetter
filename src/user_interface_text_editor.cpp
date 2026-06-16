@@ -279,11 +279,27 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
 
         if (w->wasShortcutTriggered("select_all"))
         {
-            cursor_index  = data_source->getData().size();
-            auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
-            cursor_column = a;
-            cursor_line   = b;
+            cursor_index              = data_source->getData().size();
+            auto [a, b]               = calculateColumnLineFromIndex(cursor_index);
+            cursor_column             = a;
+            cursor_line               = b;
             selection_other_end_index = 0;
+        }
+        if (w->wasShortcutTriggered("select_paragraph"))
+        {
+            if (cursor_index < data_source->getData().size())
+            {
+                size_t start = cursor_index;
+                size_t end   = cursor_index;
+                while (start > 0 && data_source->getData()[start - 1] != '\n') --start;
+                while (end < data_source->getData().size() && data_source->getData()[end] != '\n') ++end;
+                selection_other_end_index = start;
+                cursor_index              = end;
+                auto [a, b]               = calculateColumnLineFromIndex(cursor_index);
+                cursor_column             = a;
+                cursor_line               = b;
+                updateCursorIndex(true);
+            }
         }
     }
     float lines_tall = size.y / line_height;

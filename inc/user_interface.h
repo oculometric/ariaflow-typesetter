@@ -361,9 +361,15 @@ public:
     glm::vec2 minimum_size;
     UIElement* child  = nullptr;
     std::string title = "???";
+    int button_a_icon = 0;
+    std::function<void(void)> button_a_callback;
+    int button_b_icon = 2;
+    std::function<void(void)> button_b_callback;
 
 private:
     std::array<UIGrabbable*, 9> grabbables;
+    bool button_a_down = false;
+    bool button_b_down = false;
 
 public:
     UIResizablePanel(glm::vec2 min_size = glm::vec2{ 64, 128 }, glm::vec2 offset = { 0, 0 },

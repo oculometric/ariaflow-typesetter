@@ -38,6 +38,8 @@ int main()
     bool show_preview_editor         = true;
     UIResizablePanel* preview_editor = new UIResizablePanel();
     preview_editor->title            = "rendered view";
+    preview_editor->button_b_icon    = -1;
+    preview_editor->button_a_icon    = 2;
 
     bool show_palette        = true;
     UIButtonPalette* palette = new UIButtonPalette(1);
@@ -108,6 +110,11 @@ int main()
             updateViewFlagIcons();
         },
         "Alt+R");
+    raw_editor->button_a_callback = [&]()
+    {
+        show_raw_editor = !show_raw_editor;
+        updateViewFlagIcons();
+    };
     view_menu->addButton("show metrics", nullptr, "Alt+M");
     view_menu->addButton("show guides", nullptr, "Alt+G");
     updateViewFlagIcons();

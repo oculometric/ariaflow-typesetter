@@ -43,6 +43,23 @@ void UIResizablePanel::draw(UIRenderer* r)
     r->addNineSlice({ panel_position.x + (spacing * 4), content_position.y - 2 }, z,
         { content_size.x - (spacing * 8), 2 }, 3, panel_sec_colour, 0b0001);
 
+    if (button_a_icon != -1)
+    {
+        r->addNineSlice({ panel_position.x + panel_size.x - 16.0f - spacing, panel_position.y + spacing },
+            z, { 16.0f, 16.0f }, button_a_down ? 2 : 0, panel_colour, 0b1111);
+        r->addSimple(
+            { panel_position.x + panel_size.x - 14.0f - spacing, panel_position.y + 2.0f + spacing }, z,
+            { 12.0f, 12.0f }, button_a_icon, { 0, 0 }, { 1, 1 });
+    }
+    if (button_b_icon != -1)
+    {
+        r->addNineSlice({ panel_position.x + panel_size.x - 32.0f - spacing, panel_position.y + spacing },
+            z, { 16.0f, 16.0f }, button_b_down ? 2 : 0, panel_colour, 0b1111);
+        r->addSimple(
+            { panel_position.x + panel_size.x - 30.0f - spacing, panel_position.y + 2.0f + spacing }, z,
+            { 12.0f, 12.0f }, button_b_icon, { 0, 0 }, { 1, 1 });
+    }
+
     if (child)
     {
         child->size     = content_size;
@@ -58,10 +75,38 @@ void UIResizablePanel::checkInput(Window* w)
 {
     trackWindowResizeScaleSize(w, position, size);
 
-    position = grabbables[0]->checkInput(w, position + small_border,
-                   glm::vec2{ size.x - (small_border * 2), medium_border }) -
-               small_border;
+    glm::vec2 panel_position = glm::round(position);
+    glm::vec2 panel_size     = glm::round(size);
+    bool skip_resize         = false;
+    if (insideRect(w->getMousePosition(),
+            { panel_position.x + panel_size.x - 16.0f - spacing, panel_position.y + spacing },
+            { 16.0f, 16.0f }))
+    {
+        skip_resize = true;
+        if (button_a_down && checkForMouseUp(w) && button_a_callback != nullptr) button_a_callback();
+        if (!button_a_down && checkForMouseDown(w)) button_a_down = true;
+    }
+    if (insideRect(w->getMousePosition(),
+            { panel_position.x + panel_size.x - 32.0f - spacing, panel_position.y + spacing },
+            { 16.0f, 16.0f }))
+    {
+        skip_resize = true;
+        if (button_b_down && checkForMouseUp(w) && button_b_callback != nullptr) button_b_callback();
+        if (!button_b_down && checkForMouseDown(w)) button_b_down = true;
+    }
+    if (button_a_down || button_b_down) skip_resize = true;
+    if (!w->isMouseDown(KeyEvent::MOUSE_LEFT))
+    {
+        button_a_down = false;
+        button_b_down = false;
+    }
 
+    if (!skip_resize)
+        position = grabbables[0]->checkInput(w, position + small_border,
+                       glm::vec2{ size.x - (small_border * 2), medium_border }) -
+                   small_border;
+
+    if (!skip_resize)
     {
         glm::vec2 max_size = glm::vec2(10000.0f);
         // glm::vec2(w->getSize()) - glm::vec2{ 0, UIRootMenu::getHeight() };
@@ -124,11 +169,11 @@ void UIResizablePanel::checkInput(Window* w)
 
         position += change_position;
         size -= change_size;
-
-        position = glm::clamp(position, { 16.0f - size.x, UIRootMenu::getHeight() },
-            glm::vec2(w->getSize()) - 16.0f);
-        size     = glm::clamp(size, minimum_size, glm::vec2(10000.0f));
     }
+
+    position =
+        glm::clamp(position, { 16.0f - size.x, UIRootMenu::getHeight() }, glm::vec2(w->getSize()) - 16.0f);
+    size = glm::clamp(size, minimum_size, glm::vec2(10000.0f));
 
     glm::vec2 content_position;
     glm::vec2 content_size;

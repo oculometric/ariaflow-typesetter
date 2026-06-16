@@ -31,8 +31,8 @@ void Window::keyFunction(GLFWwindow* window, int key, int scancode, int action, 
         for (auto& pair : windows[window]->shortcuts)
         {
             if (pair.second.key == static_cast<uint16_t>(key) &&
-                pair.second.modifiers == (modifiers &
-                    (KeyEvent::ALT | KeyEvent::CTRL | KeyEvent::SHIFT | KeyEvent::SUPER)))
+                pair.second.modifiers ==
+                    (modifiers & (KeyEvent::ALT | KeyEvent::CTRL | KeyEvent::SHIFT | KeyEvent::SUPER)))
                 pair.second.pressed = true;
         }
     }
@@ -237,6 +237,11 @@ bool Window::wasShortcutTriggered(const std::string& action)
         return true;
     }
     return false;
+}
+
+void Window::triggerShortcut(const std::string& action)
+{
+    if (shortcuts.contains(action)) shortcuts[action].pressed = true;
 }
 
 void Window::writeClipboard(const std::string& value) { glfwSetClipboardString(window, value.c_str()); }

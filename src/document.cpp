@@ -215,14 +215,61 @@ size_t Document::findPrevWord(size_t current) const
     {
         if (getCharacterType(current - 1) != current_type && getCharacterType(current) != 1)
         {
-            if (current + 1 < data.size() && data[current + 1] == '\n')
-                ++current;
+            if (current + 1 < data.size() && data[current + 1] == '\n') ++current;
             break;
         }
-        if (!(initial == current) && data[current] == '\n' &&
-            data[current - 1] == '\n')
-            break;
+        if (!(initial == current) && data[current] == '\n' && data[current - 1] == '\n') break;
         --current;
     }
     return current;
+}
+
+void Document::pushHistory()
+{
+    if (history_steps_back != 0)
+    {
+        history.erase(history.end() - history_steps_back, history.end());
+        history_steps_back = 0;
+    }
+    else
+    {
+        history.push_back(data);
+        if (history.size() > 256) history.erase(history.begin());
+    }
+}
+
+void Document::stepBackHistory()
+{
+    if (history.empty()) return;
+
+    if (history_steps_back == 0) history.push_back(data);
+
+    if (history_steps_back + 1 < history.size())
+    {
+        ++history_steps_back;
+        data = *(history.rbegin() + history_steps_back);
+    }
+}
+
+void Document::stepForwardHistory()
+{
+    if (history.empty() || history_steps_back == 0) return;
+
+    --history_steps_back;
+    data = *(history.rbegin() + history_steps_back);
+    if (history_steps_back == 0) { history.pop_back(); }
+}
+
+bool Document::hasUndoStepsAvailable()
+{
+    if (history.empty()) return false;
+    if (history_steps_back >= history.size()) return false;
+    return true;
+}
+
+bool Document::hasRedoStepsAvailable()
+{
+    if (history.empty()) return false;
+    if (history_steps_back == 0) return false;
+    return true;
 }

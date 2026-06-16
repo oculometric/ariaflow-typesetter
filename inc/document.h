@@ -1,8 +1,23 @@
 #pragma once
 
 #include <cstdint>
+#include <deque>
+#include <queue>
 #include <string>
 #include <vector>
+
+template<typename T, typename Container = std::deque<T>> class iterable_queue :
+    public std::queue<T, Container>
+{
+public:
+    typedef typename Container::iterator iterator;
+    typedef typename Container::const_iterator const_iterator;
+
+    iterator begin() { return this->c.begin(); }
+    iterator end() { return this->c.end(); }
+    const_iterator begin() const { return this->c.begin(); }
+    const_iterator end() const { return this->c.end(); }
+};
 
 namespace AriaFlow
 {
@@ -13,6 +28,9 @@ private:
     std::string path;
     std::string data;
     bool has_unsaved_changes = true;
+
+    std::vector<std::string> history;
+    size_t history_steps_back = 0;
 
 public:
     Document();
@@ -39,6 +57,12 @@ public:
 
     size_t findNextWord(size_t current) const;
     size_t findPrevWord(size_t current) const;
+
+    void pushHistory();
+    void stepBackHistory();
+    void stepForwardHistory();
+    bool hasUndoStepsAvailable();
+    bool hasRedoStepsAvailable();
 
 private:
     int getCharacterType(size_t index) const;

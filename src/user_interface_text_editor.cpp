@@ -110,6 +110,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
         auto evt = w->getCharEvent();
         while (evt != 0)
         {
+            data_source->pushHistory();
             eraseSelection();
             data_source->getData().insert(data_source->getData().begin() + cursor_index, (char)evt);
             ++cursor_index;
@@ -339,76 +340,93 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
         w->setCursorType(CursorType::CURSOR_TEXT, 1);
 
         scroll -= w->getScrollDelta() * line_height;
-
-        if (w->wasShortcutTriggered("select_all"))
+    }
+    if (w->wasShortcutTriggered("select_all"))
+    {
+        cursor_index              = data_source->getData().size();
+        auto [a, b]               = calculateColumnLineFromIndex(cursor_index);
+        cursor_column             = a;
+        cursor_line               = b;
+        selection_other_end_index = 0;
+    }
+    if (w->wasShortcutTriggered("select_paragraph"))
+    {
+        if (cursor_index < data_source->getData().size())
         {
-            cursor_index              = data_source->getData().size();
+            auto [start, end]         = collectParagraph(cursor_index);
+            selection_other_end_index = start;
+            cursor_index              = end;
             auto [a, b]               = calculateColumnLineFromIndex(cursor_index);
             cursor_column             = a;
             cursor_line               = b;
-            selection_other_end_index = 0;
+            updateCursorIndex(true);
         }
-        if (w->wasShortcutTriggered("select_paragraph"))
+    }
+    if (w->wasShortcutTriggered("copy"))
+    {
+        if (selection_other_end_index == cursor_index)
         {
-            if (cursor_index < data_source->getData().size())
-            {
-                auto [start, end]         = collectParagraph(cursor_index);
-                selection_other_end_index = start;
-                cursor_index              = end;
-                auto [a, b]               = calculateColumnLineFromIndex(cursor_index);
-                cursor_column             = a;
-                cursor_line               = b;
-                updateCursorIndex(true);
-            }
+            auto [start, end] = collectParagraph(cursor_index);
+            copy_buffer       = data_source->getData().substr(start, end - start) + '\n';
+            w->writeClipboard(copy_buffer);
         }
-        if (w->wasShortcutTriggered("copy"))
+        else
         {
-            if (selection_other_end_index == cursor_index)
-            {
-                auto [start, end] = collectParagraph(cursor_index);
-                copy_buffer       = data_source->getData().substr(start, end - start) + '\n';
-                w->writeClipboard(copy_buffer);
-            }
-            else
-            {
-                size_t min  = glm::min(cursor_index, selection_other_end_index);
-                size_t max  = glm::max(cursor_index, selection_other_end_index);
-                copy_buffer = data_source->getData().substr(min, max - min);
-                w->writeClipboard(copy_buffer);
-            }
+            size_t min  = glm::min(cursor_index, selection_other_end_index);
+            size_t max  = glm::max(cursor_index, selection_other_end_index);
+            copy_buffer = data_source->getData().substr(min, max - min);
+            w->writeClipboard(copy_buffer);
         }
-        if (w->wasShortcutTriggered("cut"))
+    }
+    if (w->wasShortcutTriggered("cut"))
+    {
+        if (selection_other_end_index == cursor_index)
         {
-            if (selection_other_end_index == cursor_index)
-            {
-                auto [start, end] = collectParagraph(cursor_index);
-                copy_buffer       = data_source->getData().substr(start, end - start) + '\n';
-                w->writeClipboard(copy_buffer);
-                cursor_index              = start;
-                selection_other_end_index = end + 1;
-                eraseSelection();
-            }
-            else
-            {
-                size_t min  = glm::min(cursor_index, selection_other_end_index);
-                size_t max  = glm::max(cursor_index, selection_other_end_index);
-                copy_buffer = data_source->getData().substr(min, max - min);
-                w->writeClipboard(copy_buffer);
-                eraseSelection();
-            }
-        }
-        if (w->wasShortcutTriggered("paste"))
-        {
+            auto [start, end] = collectParagraph(cursor_index);
+            copy_buffer       = data_source->getData().substr(start, end - start) + '\n';
+            w->writeClipboard(copy_buffer);
+            cursor_index              = start;
+            selection_other_end_index = end + 1;
             eraseSelection();
-            copy_buffer = w->readClipboard();
-            data_source->getData().insert(cursor_index, copy_buffer);
-            cursor_index += copy_buffer.size();
-            updateLines();
-            auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
-            cursor_column = a;
-            cursor_line   = b;
-            updateCursorIndex(false);
         }
+        else
+        {
+            size_t min  = glm::min(cursor_index, selection_other_end_index);
+            size_t max  = glm::max(cursor_index, selection_other_end_index);
+            copy_buffer = data_source->getData().substr(min, max - min);
+            w->writeClipboard(copy_buffer);
+            eraseSelection();
+        }
+    }
+    if (w->wasShortcutTriggered("paste"))
+    {
+        eraseSelection();
+        copy_buffer = w->readClipboard();
+        data_source->getData().insert(cursor_index, copy_buffer);
+        cursor_index += copy_buffer.size();
+        updateLines();
+        auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+        cursor_column = a;
+        cursor_line   = b;
+        updateCursorIndex(false);
+    }
+    if (w->wasShortcutTriggered("undo"))
+    {
+        data_source->stepBackHistory();
+        updateLines();
+        auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+        cursor_column = a;
+        cursor_line   = b;
+        updateCursorIndex(false);
+    }
+    if (w->wasShortcutTriggered("redo"))
+    {
+        data_source->stepForwardHistory();
+        updateLines();
+        auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+        cursor_column = a;
+        cursor_line   = b;
+        updateCursorIndex(false);
     }
     float lines_tall = size.y / line_height;
     scroll           = glm::clamp(scroll, 0.0f,

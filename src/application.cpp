@@ -37,6 +37,9 @@ void Application::run()
         r->clear();
         r2->clear();
 
+        edit_menu->setButtonDisabled(undo_button, !d->hasUndoStepsAvailable());
+        edit_menu->setButtonDisabled(redo_button, !d->hasRedoStepsAvailable());
+
         root_menu->checkInput(w);
         root_menu->draw(r, w->getSize().x);
 
@@ -105,21 +108,22 @@ void Application::initMenus()
 
     {
         edit_menu = root_menu->addSubMenu("edit");
-        edit_menu->addButton("copy", nullptr, "Ctrl+C");
+        edit_menu->addButton("copy", [&]() { w->triggerShortcut("copy"); }, "Ctrl+C");
         w->registerShortcut("copy", KeyEvent::CTRL, 'C');
-        edit_menu->addButton("cut", nullptr, "Ctrl+X");
+        edit_menu->addButton("cut", [&]() { w->triggerShortcut("cut"); }, "Ctrl+X");
         w->registerShortcut("cut", KeyEvent::CTRL, 'X');
-        edit_menu->addButton("paste", nullptr, "Ctrl+V");
+        edit_menu->addButton("paste", [&]() { w->triggerShortcut("paste"); }, "Ctrl+V");
         w->registerShortcut("paste", KeyEvent::CTRL, 'V');
         edit_menu->addDivider();
-        edit_menu->addButton("undo", nullptr, "Ctrl+Z");
+        undo_button = edit_menu->addButton("undo", [&]() { w->triggerShortcut("undo"); }, "Ctrl+Z");
         w->registerShortcut("undo", KeyEvent::CTRL, 'Z');
-        edit_menu->addButton("redo", nullptr, "Ctrl+Shft+Z");
+        redo_button = edit_menu->addButton("redo", [&]() { w->triggerShortcut("redo"); }, "Ctrl+Shft+Z");
         w->registerShortcut("redo", (KeyEvent::Modifier)(KeyEvent::CTRL | KeyEvent::SHIFT), 'Z');
         edit_menu->addDivider();
-        edit_menu->addButton("select all", nullptr, "Ctrl+A");
+        edit_menu->addButton("select all", [&]() { w->triggerShortcut("select_all"); }, "Ctrl+A");
         w->registerShortcut("select_all", KeyEvent::CTRL, 'A');
-        edit_menu->addButton("select paragraph", nullptr, "Ctrl+Shft+A");
+        edit_menu->addButton(
+            "select paragraph", [&]() { w->triggerShortcut("select_paragraph"); }, "Ctrl+Shft+A");
         w->registerShortcut("select_paragraph", (KeyEvent::Modifier)(KeyEvent::CTRL | KeyEvent::SHIFT),
             'A');
         edit_menu->addDivider();

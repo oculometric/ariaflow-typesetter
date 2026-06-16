@@ -167,6 +167,7 @@ public:
     void setCursorType(CursorType t, int priority = 0);
     void registerShortcut(const std::string& action, KeyEvent::Modifier modifiers, uint16_t key);
     bool wasShortcutTriggered(const std::string& action);
+    void triggerShortcut(const std::string& action);
 
     void writeClipboard(const std::string& value);
     std::string readClipboard();

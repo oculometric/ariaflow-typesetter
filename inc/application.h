@@ -31,6 +31,8 @@ private:
     std::shared_ptr<UIRootMenu> root_menu;
     std::shared_ptr<UIMenu> file_menu;
     std::shared_ptr<UIMenu> edit_menu;
+    size_t undo_button;
+    size_t redo_button;
     std::shared_ptr<UIMenu> scripts_menu;
     std::shared_ptr<UIMenu> view_menu;
     std::shared_ptr<UIMenu> help_menu;

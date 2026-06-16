@@ -150,6 +150,7 @@ private:
         std::string shortcut;
         bool is_clickable = false;
         bool is_button    = false;
+        bool is_button_disabled = false;
         bool is_divider   = false;
         bool is_submenu   = false;
         std::function<void(void)> callback;
@@ -171,13 +172,14 @@ public:
     void operator=(UIMenu&& other)      = delete;
     ~UIMenu();
 
-    void addButton(const std::string& text, std::function<void(void)> callback,
+    size_t addButton(const std::string& text, std::function<void(void)> callback,
         const std::string& shortcut = "", int icon = -1);
     void addLabel(const std::string& text, int icon = -1);
     void addDivider();
     std::shared_ptr<UIMenu> addSubMenu(const std::string& text, int icon = -1);
 
     void setButtonIcon(size_t index, int icon);
+    void setButtonDisabled(size_t index, bool disabled);
 
     void draw(std::shared_ptr<UIRenderer> r, glm::vec2 top_left);
     bool checkInput(std::shared_ptr<Window> w, glm::vec2 top_left);

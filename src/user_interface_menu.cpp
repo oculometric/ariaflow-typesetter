@@ -10,7 +10,7 @@ UIMenu::UIMenu() { overall_size = { 16, spacing * 2 }; }
 
 UIMenu::~UIMenu() { items.clear(); }
 
-void UIMenu::addButton(const std::string& text, std::function<void(void)> callback,
+size_t UIMenu::addButton(const std::string& text, std::function<void(void)> callback,
     const std::string& shortcut, int icon)
 {
     Item item;
@@ -22,6 +22,8 @@ void UIMenu::addButton(const std::string& text, std::function<void(void)> callba
     item.callback     = callback;
 
     items.push_back(item);
+
+    return items.size() - 1;
 }
 
 void UIMenu::addLabel(const std::string& text, int icon)
@@ -62,6 +64,13 @@ void UIMenu::setButtonIcon(size_t index, int icon)
     items[index].icon = icon;
 }
 
+void UIMenu::setButtonDisabled(size_t index, bool disabled)
+{
+    if (index >= items.size()) return;
+    if (!items[index].is_button) return;
+    items[index].is_button_disabled = disabled;
+}
+
 void UIMenu::draw(std::shared_ptr<UIRenderer> r, glm::vec2 top_left)
 {
     float left     = top_left.x + (spacing * 2);
@@ -90,7 +99,7 @@ void UIMenu::draw(std::shared_ptr<UIRenderer> r, glm::vec2 top_left)
         if (item.is_divider) text_size = { 16, line_height };
         else
             text_size = r->addText({ left, top }, 20, format_menu, item.text,
-                item.is_clickable ? text_colour : text_sec_colour);
+                item.is_clickable && !(item.is_button_disabled) ? text_colour : text_sec_colour);
         item.position = { left - (spacing + spacing), top - (spacing + text_push_menu) };
         if (icons_present) item.position.x -= icon_size + (spacing * 1);
         item.size = { text_size.x, line_height };
@@ -136,7 +145,7 @@ bool UIMenu::checkInput(std::shared_ptr<Window> w, glm::vec2 top_left)
 
     for (auto& item : items)
     {
-        if (!item.is_clickable) continue;
+        if (!item.is_clickable || item.is_button_disabled) continue;
         bool mouse_inside = insideRect(mouse, item.position, item.size);
         if (item.is_submenu)
         {

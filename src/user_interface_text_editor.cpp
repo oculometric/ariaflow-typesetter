@@ -337,6 +337,21 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                 updateCursorIndex(false);
                 scrollCursorOnscreen();
             }
+            if (evt2.key == KeyEvent::KEY_TAB)
+            {
+                data_source->pushHistory();
+                eraseSelection();
+                size_t diff = 4 - (cursor_column % 4);
+                std::string s = std::string(diff, ' ');
+                data_source->getData().insert(cursor_index, s);
+                cursor_index += diff;
+                updateLines();
+                auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+                cursor_column = a;
+                cursor_line   = b;
+                updateCursorIndex(false);
+                scrollCursorOnscreen();
+            }
             evt2 = w->getKeyEvent();
         }
 

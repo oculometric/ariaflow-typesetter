@@ -112,6 +112,12 @@ void Document::revert()
                 continue;
             }
         }
+        if (data[i] == '\t')
+        {
+            data[i] = ' ';
+            data.insert(i, "   ");
+            i += 3;
+        }
     }
 
     has_unsaved_changes = false;

@@ -287,9 +287,14 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
             }
             if (evt2.key == KeyEvent::KEY_BACKSPACE)
             {
-                if (cursor_index != selection_other_end_index) eraseSelection();
+                if (cursor_index != selection_other_end_index)
+                {
+                    data_source->pushHistory();
+                    eraseSelection();
+                }
                 else if (cursor_index > 0)
                 {
+                    data_source->pushHistory();
                     data_source->getData().erase(data_source->getData().begin() + cursor_index - 1);
                     --cursor_index;
                     updateLines();
@@ -302,9 +307,14 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
             }
             if (evt2.key == KeyEvent::KEY_DELETE)
             {
-                if (cursor_index != selection_other_end_index) eraseSelection();
+                if (cursor_index != selection_other_end_index)
+                {
+                    data_source->pushHistory();
+                    eraseSelection();
+                }
                 else if (cursor_index < data_source->getData().size())
                 {
+                    data_source->pushHistory();
                     data_source->getData().erase(data_source->getData().begin() + cursor_index);
                     updateLines();
                     auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
@@ -316,6 +326,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
             }
             if (evt2.key == KeyEvent::KEY_ENTER)
             {
+                data_source->pushHistory();
                 eraseSelection();
                 data_source->getData().insert(data_source->getData().begin() + cursor_index, '\n');
                 ++cursor_index;
@@ -387,7 +398,9 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
             w->writeClipboard(copy_buffer);
             cursor_index              = start;
             selection_other_end_index = end + 1;
+            data_source->pushHistory();
             eraseSelection();
+            scrollCursorOnscreen();
         }
         else
         {
@@ -395,11 +408,14 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
             size_t max  = glm::max(cursor_index, selection_other_end_index);
             copy_buffer = data_source->getData().substr(min, max - min);
             w->writeClipboard(copy_buffer);
+            data_source->pushHistory();
             eraseSelection();
+            scrollCursorOnscreen();
         }
     }
     if (w->wasShortcutTriggered("paste"))
     {
+        data_source->pushHistory();
         eraseSelection();
         copy_buffer = w->readClipboard();
         data_source->getData().insert(cursor_index, copy_buffer);
@@ -409,6 +425,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
         cursor_column = a;
         cursor_line   = b;
         updateCursorIndex(false);
+        scrollCursorOnscreen();
     }
     if (w->wasShortcutTriggered("undo"))
     {

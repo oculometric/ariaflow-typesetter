@@ -2,9 +2,9 @@
 
 #include <array>
 #include <glm/vec2.hpp>
+#include <map>
 #include <queue>
 #include <string>
-#include <map>
 
 struct GLFWwindow;
 struct GLFWcursor;
@@ -137,7 +137,7 @@ private:
     int last_cursor_priority  = 0;
     glm::vec2 last_frame_size;
     glm::vec2 current_frame_size;
-    float scroll_delta = 0.0f;
+    float scroll_delta      = 0.0f;
     float scroll_delta_last = 0.0f;
     std::map<std::string, KeyEvent> shortcuts;
 
@@ -159,6 +159,10 @@ public:
     glm::vec2 getMouseDelta() const;
     float getScrollDelta() const { return scroll_delta_last; }
     bool isMouseDown(KeyEvent::Key mouse_button) const;
+    void clearMouseEvents();
+    bool isKeyDown(KeyEvent::Key key) const;
+    void clearKeyEvents();
+    void clearCharEvents();
     void poll();
     void present() const;
     bool shouldClose() const;

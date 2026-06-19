@@ -355,13 +355,24 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
             evt2 = w->getKeyEvent();
         }
 
-        if (w->isMouseDown(KeyEvent::MOUSE_LEFT))
+        if (!mouse_down_event_received && checkForMouseDown(w))
+        {
+            mouse_down_event_received = true;
+            auto [a, b]   = findCursorPlacement(mouse);
+            cursor_column = a;
+            cursor_line   = b;
+            updateCursorIndex(w->isKeyDown(KeyEvent::KEY_LEFT_SHIFT));
+        }
+
+        if (w->isMouseDown(KeyEvent::MOUSE_LEFT) && mouse_down_event_received)
         {
             auto [a, b]   = findCursorPlacement(mouse);
             cursor_column = a;
             cursor_line   = b;
-            updateCursorIndex(!checkForMouseDown(w));
+            updateCursorIndex(true);
         }
+        else
+            mouse_down_event_received = false;
 
         w->setCursorType(CursorType::CURSOR_TEXT, 1);
 

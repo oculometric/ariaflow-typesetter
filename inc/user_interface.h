@@ -410,6 +410,7 @@ private:
     float right_margin = 12.0f;
     float scroll       = 0.0f;
     std::string copy_buffer;
+    bool mouse_down_event_received = false;
 
 public:
     UITextEditor()                            = default;
@@ -440,7 +441,6 @@ private:
 bool insideRect(glm::vec2 point, glm::vec2 top_left, glm::vec2 size);
 bool checkForMouseDown(std::shared_ptr<Window> w);
 bool checkForMouseUp(std::shared_ptr<Window> w);
-void consumeAllMouseEvents(std::shared_ptr<Window> w);
 void trackWindowResizeFixedSize(std::shared_ptr<Window> w, glm::vec2& top_left, glm::vec2 size);
 void trackWindowResizeScaleSize(std::shared_ptr<Window> w, glm::vec2& top_left, glm::vec2& size);
 

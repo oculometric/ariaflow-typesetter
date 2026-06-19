@@ -109,7 +109,7 @@ glm::vec2 UIGrabbable::checkInput(std::shared_ptr<Window> w, glm::vec2 position,
         if (!w->isMouseDown(KeyEvent::MOUSE_LEFT)) grabbed = false;
     }
 
-    if (inside || grabbed) w->setCursorType(cursor);
+    if (inside || grabbed) w->setCursorType(cursor, 2);
 
     return position;
 }

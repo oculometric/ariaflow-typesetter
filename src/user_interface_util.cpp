@@ -35,12 +35,6 @@ bool AriaFlow::checkForMouseUp(std::shared_ptr<Window> w)
     return false;
 }
 
-void AriaFlow::consumeAllMouseEvents(std::shared_ptr<Window> w)
-{
-    auto evt = w->getMouseEvent();
-    while (evt.key != 0) evt = w->getMouseEvent();
-}
-
 void AriaFlow::trackWindowResizeFixedSize(std::shared_ptr<Window> w, glm::vec2& top_left, glm::vec2 size)
 {
     glm::vec2 old_window_size = w->getLastSize();

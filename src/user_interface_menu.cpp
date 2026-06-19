@@ -254,7 +254,7 @@ void UIRootMenu::checkInput(std::shared_ptr<Window> w)
         if (inside_menu && checkForMouseDown(w))
         {
             is_menu_open = true;
-            consumeAllMouseEvents(w);
+            w->clearMouseEvents();
         }
         else
         {

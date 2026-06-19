@@ -50,6 +50,11 @@ void UIButtonPalette::draw(std::shared_ptr<UIRenderer> r)
 void UIButtonPalette::checkInput(std::shared_ptr<Window> w)
 {
     trackWindowResizeFixedSize(w, position, size);
+    bool involved = insideRect(w->getMousePosition(), position, size) ||
+                    grabbables[0]->isCurrentlyGrabbed() || grabbables[1]->isCurrentlyGrabbed() ||
+                    grabbables[2]->isCurrentlyGrabbed();
+
+    if (involved) w->setCursorType(CursorType::CURSOR_NORMAL, 2);
 
     position = grabbables[0]->checkInput(w, position, { size.x, medium_border });
 
@@ -93,6 +98,8 @@ void UIButtonPalette::checkInput(std::shared_ptr<Window> w)
         if ((col + 1) % columns == 0) height += button_size.y;
         col = (col + 1) % columns;
     }
+
+    if (involved) w->clearMouseEvents();
 }
 
 glm::vec2 UIButtonPalette::recalculateSize()

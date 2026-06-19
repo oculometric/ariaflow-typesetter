@@ -74,9 +74,9 @@ void Application::run()
             dialog_prompt->draw(r);
         }
 
-        consumeAllMouseEvents(w);
-        // consumeAllKeyEvents(w);
-        // consumeAllCharEvents(w);
+        w->clearMouseEvents();
+        w->clearKeyEvents();
+        w->clearCharEvents();
         r->finalise();
         r2->finalise();
     }

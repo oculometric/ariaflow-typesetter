@@ -183,6 +183,23 @@ bool Window::isMouseDown(KeyEvent::Key mouse_button) const
     return glfwGetMouseButton(window, but);
 }
 
+void Window::clearMouseEvents()
+{
+    while (!mouse_events.empty()) mouse_events.pop();
+}
+
+bool Window::isKeyDown(KeyEvent::Key key) const { return glfwGetKey(window, key) == GLFW_PRESS; }
+
+void Window::clearKeyEvents()
+{
+    while (!key_events.empty()) key_events.pop();
+}
+
+void Window::clearCharEvents()
+{
+    while (!char_events.empty()) char_events.pop();
+}
+
 void Window::poll()
 {
     last_cursor_priority = 0;

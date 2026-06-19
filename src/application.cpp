@@ -15,7 +15,10 @@ Application::Application()
     initEditors();
     initTools();
 
-    dialog_prompt = std::make_shared<UIResizablePanel>(glm::vec2{ 400, 200 });
+    dialog_prompt   = std::make_shared<UIResizablePanel>(glm::vec2{ 400, 200 });
+    dialog_message  = std::make_shared<UILabel>("", TEXT_ALIGN_LEFT, TextFlags{});
+    dialog_button_1 = std::make_shared<UIButton>("", []() {});
+    dialog_button_2 = std::make_shared<UIButton>("", []() {});
 
     setSideBySideLayout();
     updateViewIcons();
@@ -62,16 +65,28 @@ void Application::run()
 
         if (is_modal)
         {
-            dialog_prompt->title         = "TEST TITLE";
-            dialog_prompt->button_a_icon = -1;
-            dialog_prompt->button_b_icon = -1;
-            dialog_prompt->z = 8.0f;
-            dialog_prompt->size          = { 400, 200 };
-            dialog_prompt->position      = (glm::vec2(w->getSize()) - dialog_prompt->size) / 2.0f;
+            glm::vec2 temp          = dialog_prompt->size;
+            dialog_prompt->position = (glm::vec2(w->getSize()) - dialog_prompt->size) / 2.0f;
             dialog_prompt->checkInput(w);
-            dialog_prompt->size     = { 400, 200 };
+            dialog_prompt->size     = temp;
             dialog_prompt->position = (glm::vec2(w->getSize()) - dialog_prompt->size) / 2.0f;
             dialog_prompt->draw(r);
+            dialog_prompt->size     = temp;
+            dialog_prompt->position = (glm::vec2(w->getSize()) - dialog_prompt->size) / 2.0f;
+
+            dialog_button_1->position =
+                glm::vec2{ (dialog_prompt->size.x * 0.25f) - (dialog_button_1->size.x / 2.0f),
+                    dialog_prompt->size.y - (dialog_button_1->size.y + 12.0f) } +
+                dialog_prompt->position;
+            dialog_button_2->position =
+                glm::vec2{ (dialog_prompt->size.x * 0.75f) - (dialog_button_2->size.x / 2.0f),
+                    dialog_prompt->size.y - (dialog_button_2->size.y + 12.0f) } +
+                dialog_prompt->position;
+            dialog_button_1->checkInput(w);
+            dialog_button_2->checkInput(w);
+
+            dialog_button_1->draw(r);
+            dialog_button_2->draw(r);
         }
 
         w->clearMouseEvents();
@@ -105,7 +120,21 @@ void Application::initMenus()
             "new",
             [&]() -> void
             {
-                if (d->hasUnsavedChanges()) { is_modal = true; }
+                if (d->hasUnsavedChanges())
+                {
+                    triggerModal(
+                        "unsaved changes",
+                        "you have unsaved changes. do you want do discard them? they will be lost forever!",
+                        7, { 320, 140 }, "cancel", [&]() { is_modal = false; }, -1, "discard",
+                        [&]()
+                        {
+                            d                        = std::make_shared<Document>();
+                            text_editor->data_source = d;
+                            text_editor->refresh();
+                            is_modal = false;
+                        },
+                        7);
+                }
                 else
                 {
                     d                        = std::make_shared<Document>();
@@ -283,4 +312,42 @@ void Application::setTopToBottomLayout()
     raw_editor->position = { 0, UIRootMenu::getHeight() + w->getSize().y / 2.0f };
     raw_editor->size     = { w->getSize().x, (w->getSize().y / 2.0f) - UIRootMenu::getHeight() };
     updateViewIcons();
+}
+
+void Application::triggerModal(const std::string& title, const std::string& message, int message_icon,
+    glm::vec2 size, const std::string& button_1, std::function<void(void)> button_1_callback,
+    int button_1_icon, const std::string& button_2, std::function<void(void)> button_2_callback,
+    int button_2_icon)
+{
+    is_modal                     = true;
+    dialog_prompt->title         = title;
+    dialog_prompt->size          = size;
+    dialog_prompt->minimum_size  = size;
+    dialog_prompt->button_a_icon = -1;
+    dialog_prompt->button_b_icon = -1;
+    dialog_prompt->z             = 8.0f;
+    dialog_prompt->child         = dialog_message;
+
+    dialog_message->message    = message;
+    dialog_message->z          = 8.0f;
+    dialog_message->settings   = TEXT_FLAGS_BOLD;
+    dialog_message->direction  = TEXT_ALIGN_CENTER;
+    dialog_message->wrap       = true;
+    dialog_message->text_size  = 20.0f;
+    dialog_message->icon_index = message_icon;
+
+    dialog_button_1->message       = button_1;
+    dialog_button_1->icon_index    = button_1_icon;
+    dialog_button_1->callback_func = button_1_callback;
+    dialog_button_1->z             = 8.0f;
+
+    if (!button_2.empty())
+    {
+        dialog_button_2->message       = button_2;
+        dialog_button_2->icon_index    = button_2_icon;
+        dialog_button_2->callback_func = button_2_callback;
+        dialog_button_2->z             = 8.0f;
+    }
+    else
+        dialog_button_2->message = "";
 }

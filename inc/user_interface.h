@@ -148,11 +148,11 @@ private:
     {
         std::string text;
         std::string shortcut;
-        bool is_clickable = false;
-        bool is_button    = false;
+        bool is_clickable       = false;
+        bool is_button          = false;
         bool is_button_disabled = false;
-        bool is_divider   = false;
-        bool is_submenu   = false;
+        bool is_divider         = false;
+        bool is_submenu         = false;
         std::function<void(void)> callback;
         std::shared_ptr<UIMenu> submenu;
         int icon = -1;
@@ -249,10 +249,10 @@ public:
     std::string message;
     int icon_index;
     float z = 0.0f;
+    std::function<void(void)> callback_func;
 
 private:
-    bool is_pressed = false;
-    std::function<void(void)> callback_func;
+    bool is_pressed   = false;
     bool mouse_inside = false;
 
 public:
@@ -277,6 +277,8 @@ public:
     int icon_index;
     TextAlign direction;
     TextFlags settings;
+    bool wrap       = false;
+    float text_size = 24.0f;
 
 public:
     UILabel(const std::string& text, TextAlign align, TextFlags flags, int icon = -1,
@@ -424,6 +426,8 @@ public:
 
     void draw(std::shared_ptr<UIRenderer> r) override;
     void checkInput(std::shared_ptr<Window> w) override;
+
+    void refresh();
 
 private:
     void updateLines();

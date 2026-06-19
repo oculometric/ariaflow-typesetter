@@ -232,11 +232,12 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
 
     const glm::vec2 char_size = text_size * (formatting.size / text_size.y);
     size_t allocated_chars    = backing.vertex_count / 4;
-    const size_t chars_wide =
+    size_t chars_wide =
         static_cast<size_t>(glm::floor(static_cast<float>(formatting.clip_bounds.x) / char_size.x));
+    if (formatting.clip_bounds.x == 0.0f) chars_wide = SIZE_MAX;
     std::vector<std::string> lines;
 
-    if (!formatting.wrap || (formatting.wrap && !formatting.clip))
+    if (!formatting.wrap || (!formatting.wrap && formatting.clip))
     {
         if (formatting.terminate_at_newline) lines.push_back(text.substr(0, text.find('\n')));
         else

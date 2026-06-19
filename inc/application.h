@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+#include <glm/vec2.hpp>
 #include <memory>
 
 namespace AriaFlow
@@ -50,6 +52,9 @@ private:
     // modal panels
     bool is_modal = false;
     std::shared_ptr<UIResizablePanel> dialog_prompt;
+    std::shared_ptr<UIButton> dialog_button_1;
+    std::shared_ptr<UIButton> dialog_button_2;
+    std::shared_ptr<UILabel> dialog_message;
 
 public:
     Application();
@@ -65,6 +70,11 @@ private:
     void updateViewIcons();
     void setSideBySideLayout();
     void setTopToBottomLayout();
+
+    void triggerModal(const std::string& title, const std::string& message, int message_icon,
+        glm::vec2 size, const std::string& button_1, std::function<void(void)> button_1_callback,
+        int button_1_icon, const std::string& button_2, std::function<void(void)> button_2_callback,
+        int button_2_icon);
 };
 
 } // namespace AriaFlow

@@ -65,16 +65,24 @@ UILabel::UILabel(const std::string& text, TextAlign align, TextFlags flags, int 
 void UILabel::draw(std::shared_ptr<UIRenderer> r)
 {
     glm::vec2 pos = position;
-    if (direction == TEXT_ALIGN_RIGHT) pos -= icon_size;
+    glm::vec2 sz  = size;
     if (icon_index != -1)
     {
-        r->addSimple(pos, z, { icon_size, icon_size }, icon_index, { 0, 0 }, { 1, 1 });
-        if (direction == TEXT_ALIGN_RIGHT) pos.x -= (spacing * 2);
+        sz.x -= icon_size + (spacing * 2);
+        if (direction == TEXT_ALIGN_RIGHT) pos.x -= icon_size + (spacing * 2);
         else
             pos.x += icon_size + (spacing * 2);
+        r->addSimple((direction == TEXT_ALIGN_RIGHT ? (position - glm::vec2{ (icon_size + spacing), 0 })
+                                                    : position) +
+                         spacing,
+            z, { icon_size, icon_size }, icon_index, { 0, 0 }, { 1, 1 });
     }
     if (!message.empty())
-        r->addText(pos + glm::vec2{ 0, text_push }, z, { direction, settings }, message, text_colour);
+        r->addText(pos + glm::vec2{ direction == TEXT_ALIGN_RIGHT
+                                        ? sz.x
+                                        : (direction == TEXT_ALIGN_CENTER ? sz.x / 2.0f : 0.0f),
+                             text_push },
+            z, { direction, settings, true, wrap, false, sz, 0, text_size }, message, text_colour);
 }
 
 UIPanel::UIPanel(glm::vec4 fill, int layer, uint8_t borders, glm::vec2 offset, glm::vec2 dimensions) :

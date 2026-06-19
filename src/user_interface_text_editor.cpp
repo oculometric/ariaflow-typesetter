@@ -341,7 +341,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
             {
                 data_source->pushHistory();
                 eraseSelection();
-                size_t diff = 4 - (cursor_column % 4);
+                size_t diff   = 4 - (cursor_column % 4);
                 std::string s = std::string(diff, ' ');
                 data_source->getData().insert(cursor_index, s);
                 cursor_index += diff;
@@ -358,9 +358,9 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
         if (!mouse_down_event_received && checkForMouseDown(w))
         {
             mouse_down_event_received = true;
-            auto [a, b]   = findCursorPlacement(mouse);
-            cursor_column = a;
-            cursor_line   = b;
+            auto [a, b]               = findCursorPlacement(mouse);
+            cursor_column             = a;
+            cursor_line               = b;
             updateCursorIndex(w->isKeyDown(KeyEvent::KEY_LEFT_SHIFT));
         }
 
@@ -474,6 +474,16 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
     float lines_tall = size.y / line_height;
     scroll           = glm::clamp(scroll, 0.0f,
         line_height * glm::max(static_cast<float>(lines.size()) - glm::max(lines_tall - 8.0f, 1.0f), 0.0f));
+}
+
+void UITextEditor::refresh()
+{
+    cursor_index              = 0;
+    selection_other_end_index = 0;
+    cursor_column             = 0;
+    cursor_line               = 0;
+    scroll                    = 0;
+    updateLines();
 }
 
 void UITextEditor::updateLines()

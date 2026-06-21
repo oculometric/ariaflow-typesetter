@@ -115,7 +115,11 @@ public:
     glm::vec2 addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text,
         glm::vec3 colour, BackingData& backing);
     glm::vec2 addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text,
+        std::vector<std::pair<size_t, glm::vec3>> colours, BackingData& backing);
+    glm::vec2 addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text,
         glm::vec3 colour);
+    glm::vec2 addText(glm::vec2 position, float z, TextFormatting formatting, const std::string& text,
+        std::vector<std::pair<size_t, glm::vec3>> colours);
     void addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill,
         uint8_t borders, BackingData& backing);
     void addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill,
@@ -134,8 +138,8 @@ public:
 private:
     bool isBackingValid(const BackingData& backing_ref);
     void addBacking(BackingData& backing_ref, BackingDataInternal backing);
-    void updateTextSingleLine(glm::vec2 position, TextFormatting formatting, const std::string& text,
-        glm::vec3 colour, BackingDataInternal backing);
+    void updateTextSingleLine(glm::vec2 position, TextFormatting formatting, const std::string& text, size_t text_offset,
+        std::vector<std::pair<size_t, glm::vec3>> colours, BackingDataInternal backing);
     void updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 uv_tl,
         glm::vec2 uv_br, glm::vec4 colour_1, glm::vec4 colour_2, glm::vec4 data_1, glm::vec4 data_2,
         BackingDataInternal backing);

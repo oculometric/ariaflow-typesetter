@@ -195,6 +195,16 @@ float UIRenderer::calculateTextWidth(const std::string& text, TextFormatting for
 glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting formatting,
     const std::string& text, glm::vec3 colour, BackingData& backing_ref)
 {
+    return addText(position, z, formatting, text,
+        {
+            { 0, colour }
+    },
+        backing_ref);
+}
+
+glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting formatting,
+    const std::string& text, std::vector<std::pair<size_t, glm::vec3>> colours, BackingData& backing_ref)
+{
     BackingDataInternal backing;
     if (!isBackingValid(backing_ref))
     {
@@ -235,11 +245,11 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
     size_t chars_wide =
         static_cast<size_t>(glm::floor(static_cast<float>(formatting.clip_bounds.x) / char_size.x));
     if (formatting.clip_bounds.x == 0.0f) chars_wide = SIZE_MAX;
-    std::vector<std::string> lines;
+    std::vector<std::pair<std::string, size_t>> lines;
 
     if (!formatting.wrap || (!formatting.wrap && formatting.clip))
     {
-        if (formatting.terminate_at_newline) lines.push_back(text.substr(0, text.find('\n')));
+        if (formatting.terminate_at_newline) lines.emplace_back(text.substr(0, text.find('\n')), 0);
         else
         {
             size_t newline = 0;
@@ -254,7 +264,7 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
                            formatting.clip_bounds.x)
                         line.pop_back();
                 }
-                lines.push_back(line);
+                lines.emplace_back(line, newline);
                 newline = next + 1;
             } while (next != std::string::npos);
         }
@@ -293,7 +303,7 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
                 }
             }
 
-            lines.push_back(text.substr(base, split - base));
+            lines.emplace_back(text.substr(base, split - base), base);
             base = new_base;
             if (split < text.size() && text[split] == '\n' && formatting.terminate_at_newline) break;
         }
@@ -306,16 +316,16 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
     glm::vec2 top_left = position;
     int bottom_clip    = formatting.clip_bounds.y;
     if (bottom_clip <= 0 || !formatting.clip) bottom_clip = INT_MAX;
-    for (const auto& line : lines)
+    for (const auto& [line, offset] : lines)
     {
         TextFormatting sub_format = formatting;
         sub_format.clip_bounds.y  = bottom_clip;
         if (allocated_chars < line.size())
         {
-            updateTextSingleLine(top_left, sub_format, line.substr(0, allocated_chars), colour, temp);
+            updateTextSingleLine(top_left, sub_format, line.substr(0, allocated_chars), 0, colours, temp);
             break;
         }
-        updateTextSingleLine(top_left, sub_format, line, colour, temp);
+        updateTextSingleLine(top_left, sub_format, line, offset, colours, temp);
         allocated_chars -= line.size();
 
         top_left.y += char_size.y;
@@ -325,7 +335,7 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
     }
 
     float longest = 0;
-    for (const auto& line : lines)
+    for (const auto& [line, offset] : lines)
     {
         float length = calculateTextWidth(line, formatting);
         if (length > longest) longest = length;
@@ -339,6 +349,13 @@ glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting format
 {
     BackingData backing;
     return addText(position, z, formatting, text, colour, backing);
+}
+
+glm::vec2 UIRenderer::addText(glm::vec2 position, float z, TextFormatting formatting,
+    const std::string& text, std::vector<std::pair<size_t, glm::vec3>> colours)
+{
+    BackingData backing;
+    return addText(position, z, formatting, text, colours, backing);
 }
 
 void UIRenderer::addNineSlice(glm::vec2 position, float z, glm::vec2 size, int layer, glm::vec4 fill,
@@ -441,7 +458,8 @@ void UIRenderer::addBacking(BackingData& backing_ref, BackingDataInternal backin
 }
 
 void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatting,
-    const std::string& text, glm::vec3 colour, BackingDataInternal backing)
+    const std::string& text, size_t text_offset, std::vector<std::pair<size_t, glm::vec3>> colours,
+    BackingDataInternal backing)
 {
     const glm::vec2 uv_size   = text_size / (text_size + 2.0f);
     const glm::vec2 char_size = text_size * (formatting.size / text_size.y);
@@ -456,6 +474,7 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
     temp.vertex_count        = 4;
     temp.index_count         = 6;
 
+    size_t char_index = text_offset;
     for (char c : text)
     {
         glm::vec2 uv_base = 1.0f / (text_size + 2.0f);
@@ -494,6 +513,15 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
             uv_br.x -= subtract_amount_uv;
         }
 
+        glm::vec3 colour = { 1, 1, 1 };
+        for (const auto& [offset, col] : colours)
+        {
+            if (char_index >= offset)
+            {
+                colour = col;
+                break;
+            }
+        }
         updateQuad(tl, tr, bl, br, uv_tl, uv_br, glm::vec4{ colour, 1 }, background_colour,
             glm::vec4{ 0, char_size, static_cast<float>(c) },
             glm::vec4{ static_cast<float>(flags), 0, 0, 0 }, temp);
@@ -502,6 +530,7 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
 
         temp.first_vertex += 4;
         temp.first_index += 6;
+        ++char_index;
     }
 }
 

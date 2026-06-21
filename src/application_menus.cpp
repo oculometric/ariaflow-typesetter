@@ -21,6 +21,7 @@ void Application::initMenus()
         file_menu->addButton("open...", [&]() -> void { fileOpen(); }, "Ctrl+O", 14);
         w->registerShortcut("open_file", KeyEvent::CTRL, 'O');
         std::shared_ptr<UIMenu> recents = file_menu->addSubMenu("open recent");
+        // TODO: open recents history
         recents->addButton("item 1", []() -> void { std::cout << "test" << std::endl; });
         recents->addButton("item 2", nullptr);
         recents->addButton("item 3", nullptr);
@@ -134,49 +135,44 @@ void Application::initMenus()
 
 void Application::fileNew()
 {
-    if (d->hasUnsavedChanges())
-    {
-        triggerModal(
-            "unsaved changes",
-            "you have unsaved changes. do you want do discard them? they will be lost forever!", 7,
-            { 320, 140 }, "cancel", nullptr, -1, "discard",
-            [&]()
-            {
-                d = std::make_shared<Document>();
-                d->getData().clear();
-                text_editor->data_source = d;
-                text_editor->refresh();
-            },
-            7);
-    }
-    else
+    auto finalCode = [&]() -> void
     {
         d = std::make_shared<Document>();
         d->getData().clear();
         text_editor->data_source = d;
         text_editor->refresh();
+    };
+    if (d->hasUnsavedChanges())
+    {
+        triggerModal("unsaved changes",
+            "you have unsaved changes. do you want do discard them? they will be lost forever!", 7,
+            { 320, 140 }, "cancel", nullptr, -1, "discard", finalCode, 7);
     }
+    else
+        finalCode();
 }
 
 void Application::fileOpen()
 {
+    auto dialogCode = [&]() -> void
+    {
+        auto open_dialog = pfd::open_file("export...", "",
+            { "AriaFlow Files (.aria)", "*.aria", "Text Files (.txt)", "*.txt" }, pfd::opt::none);
+        if (!open_dialog.result().empty())
+        {
+            d                        = std::make_shared<Document>(open_dialog.result()[0]);
+            text_editor->data_source = d;
+            text_editor->refresh();
+        }
+    };
     if (d->hasUnsavedChanges())
     {
-        triggerModal(
-            "unsaved changes",
+        triggerModal("unsaved changes",
             "you have unsaved changes. do you want do discard them? they will be lost forever!", 7,
-            { 320, 140 }, "cancel", nullptr, -1, "discard",
-            [&]()
-            {
-                // TODO: show open file dialog
-            },
-            7);
+            { 320, 140 }, "cancel", nullptr, -1, "discard", dialogCode, 7);
     }
     else
-    {
-        // TODO: show open file dialog
-    }
-    std::cout << "fileOpen UNIMPLEMENTED" << std::endl;
+        dialogCode();
 }
 
 void Application::fileExport()
@@ -189,8 +185,8 @@ void Application::fileExport()
         pfd::opt::none);
     if (export_dialog.result().empty()) return;
 
-    triggerModal("unimplemented", "i actually don't know how to export stuff yet.", 10, { 320, 140 }, "okay",
-        nullptr, -1, "", nullptr, -1);
+    triggerModal("unimplemented", "i actually don't know how to export stuff yet.", 10, { 320, 140 },
+        "okay", nullptr, -1, "", nullptr, -1);
 
     // TODO: export (pdf, images, html, markdown, plain text)
     std::cout << "fileExport UNIMPLEMENTED" << std::endl;
@@ -203,16 +199,20 @@ void Application::fileSave()
 
 void Application::fileSaveAs()
 {
-    auto save_dialog =
-        pfd::save_file("save as...", (d->getPath().empty() ? "~/Untitled.aria" : d->getPath()),
-            { "AriaFlow Files (.aria)", "*.aria", "Text Files (.txt)", "*.txt" }, pfd::opt::none);
-    if (!save_dialog.result().empty()) { d->saveAs(save_dialog.result()); }
+    bool flag = false;
+    do
+    {
+        auto save_dialog =
+            pfd::save_file("save as...", (d->getPath().empty() ? "~/Untitled.aria" : d->getPath()),
+                { "AriaFlow Files (.aria)", "*.aria", "Text Files (.txt)", "*.txt" }, pfd::opt::none);
+        if (save_dialog.result().empty()) break;
+        flag = d->saveAs(save_dialog.result());
+    } while (!flag);
 }
 
 void Application::fileSaveIncremental()
 {
-    // TODO: if (!d->saveIncremental()) fileSaveAs();
-    std::cout << "fileSaveIncremental UNIMPLEMENTED" << std::endl;
+    if (!d->saveIncremental()) fileSaveAs();
 }
 
 void Application::fileRevert()

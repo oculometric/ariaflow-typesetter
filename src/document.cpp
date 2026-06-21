@@ -1,6 +1,7 @@
 #include "document.h"
 
 #include <filesystem>
+#include <format>
 #include <fstream>
 
 using namespace AriaFlow;
@@ -52,9 +53,8 @@ Document::Document()
 
 Document::Document(const std::string& load_path)
 {
-    // path = load_path;
-    // has_unsaved_changes = false;
-    // TODO: load document from existing file
+    path = load_path;
+    revert();
 }
 
 bool Document::save()
@@ -77,6 +77,37 @@ bool Document::saveAs(const std::string& new_path)
     return save();
 }
 
+bool Document::saveIncremental()
+{
+    if (path.empty()) return false;
+
+    // trim off the extension
+    auto p                   = std::filesystem::path(path);
+    std::string trimmed_path = (p.parent_path().append(p.stem().generic_string())).generic_string();
+
+    // first check if the last character of the path is a number, and track backwards until it isnt
+    size_t index = trimmed_path.size() - 1;
+    while (trimmed_path[index] >= '0' && trimmed_path[index] <= '9' && index > 0) --index;
+    size_t chars_in_number = trimmed_path.size() - (index + 1);
+    size_t chars_in_name   = index - 1;
+
+    std::string new_path;
+    if (chars_in_name > 0 && chars_in_number > 0)
+    {
+        // if we find a regular letter before that, then we can extract the number and increment it
+        size_t version = std::stoi(trimmed_path.substr(index + 1));
+        new_path       = trimmed_path.substr(0, index + 1) + std::format("{:0>4}", version + 1);
+    }
+    else
+    {
+        // otherwise we have to append "_v0001" to the path (which should be parsed correctly next time)
+        new_path = trimmed_path + "_v0001";
+    }
+    new_path += p.extension().generic_string();
+
+    return saveAs(new_path);
+}
+
 void Document::revert()
 {
     if (path.empty())
@@ -92,6 +123,7 @@ void Document::revert()
         return;
     }
     size_t size = file.tellg();
+    file.seekg(std::ios::beg);
     data.resize(size);
     file.read(data.data(), data.size());
     file.close();

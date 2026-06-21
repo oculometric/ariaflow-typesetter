@@ -48,6 +48,12 @@ private:
     // tool panels
     bool show_palette;
     std::shared_ptr<UIButtonPalette> palette;
+    // TODO: properties panel
+    // TODO: metrics panel
+    // TODO: document panel
+    bool right_click_open;
+    glm::vec2 right_click_position; // TODO: right click menu
+    std::shared_ptr<UIMenu> right_click_menu;
 
     // modal panels
     bool is_modal = false;

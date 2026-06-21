@@ -48,6 +48,30 @@ void Application::run()
         if (!is_modal) root_menu->checkInput(w);
         root_menu->draw(r, w->getSize().x);
 
+        if (is_modal) right_click_open = false;
+        if (right_click_open)
+        {
+            right_click_menu->checkInput(w, right_click_position);
+            right_click_menu->draw(r, right_click_position);
+            auto evt = w->getMouseEvent();
+            while (evt.key != 0)
+            {
+                if (evt.key == KeyEvent::MOUSE_RIGHT && evt.pressed == false)
+                    right_click_position = w->getMousePosition();
+                else if (evt.pressed == false)
+                    right_click_open = false;
+                evt = w->getMouseEvent();
+            }
+        }
+        else if (!is_modal)
+        {
+            if (w->isMouseDown(KeyEvent::MOUSE_RIGHT))
+            {
+                right_click_open     = true;
+                right_click_position = w->getMousePosition();
+            }
+        }
+
         if (show_palette)
         {
             palette->checkInput(w);
@@ -157,6 +181,14 @@ void Application::initTools()
     show_palette = true;
     palette      = std::make_shared<UIButtonPalette>(1);
     for (int i = 0; i < 16; ++i) palette->addButton(i, [i]() { std::cout << i << std::endl; });
+    right_click_open = false;
+    right_click_menu = std::make_shared<UIMenu>();
+    right_click_menu->addButton("copy", nullptr);
+    right_click_menu->addButton("cut", nullptr);
+    right_click_menu->addButton("paste", nullptr);
+    right_click_menu->addDivider();
+    right_click_menu->addSubMenu("insert");
+    right_click_menu->addButton("refresh", nullptr);
 }
 
 void Application::updateViewIcons()

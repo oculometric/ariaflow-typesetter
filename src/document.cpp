@@ -242,6 +242,7 @@ void Document::pushHistory()
         history.push_back(data);
         if (history.size() > 256) history.erase(history.begin());
     }
+    setUnsavedFlag();
 }
 
 void Document::stepBackHistory()

@@ -48,7 +48,7 @@ public:
     void setUnsavedFlag() { has_unsaved_changes = true; }
     bool save();
     bool saveAs(const std::string& new_path);
-    void saveIncremental();
+    bool saveIncremental();
     void revert();
 
     std::vector<std::pair<size_t, size_t>> splitToLines(size_t chars_per_line) const;

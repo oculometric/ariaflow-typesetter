@@ -229,7 +229,12 @@ void Window::present() const
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-bool Window::shouldClose() const { return glfwWindowShouldClose(window); }
+bool Window::shouldClose() const
+{
+    bool tmp = glfwWindowShouldClose(window);
+    glfwSetWindowShouldClose(window, false);
+    return tmp;
+}
 
 void Window::makeCurrentContext() const { glfwMakeContextCurrent(window); }
 

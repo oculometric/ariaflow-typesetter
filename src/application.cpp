@@ -26,11 +26,11 @@ Application::Application()
 
 void Application::run()
 {
-    while (!w->shouldClose())
+    while (true)
     {
         // render
-        w->setTitle((d->hasUnsavedChanges() ? "*" : "") +
-                    (d->getPath().empty() ? "Untitled.aria" : d->getPath()) + " - ariaflow");
+        w->setTitle((d->getPath().empty() ? "Untitled.aria" : d->getPath()) +
+                    (d->hasUnsavedChanges() ? "*" : "") + " - ariaflow");
         w->makeCurrentContext();
         r->draw(w);
         r2->draw(w);
@@ -74,20 +74,41 @@ void Application::run()
             dialog_prompt->size     = temp;
             dialog_prompt->position = (glm::vec2(w->getSize()) - dialog_prompt->size) / 2.0f;
 
-            dialog_button_1->position =
-                glm::vec2{ (dialog_prompt->size.x * 0.25f) - (dialog_button_1->size.x / 2.0f),
-                    dialog_prompt->size.y - (dialog_button_1->size.y + 12.0f) } +
-                dialog_prompt->position;
-            dialog_button_2->position =
-                glm::vec2{ (dialog_prompt->size.x * 0.75f) - (dialog_button_2->size.x / 2.0f),
-                    dialog_prompt->size.y - (dialog_button_2->size.y + 12.0f) } +
-                dialog_prompt->position;
-            dialog_button_1->checkInput(w);
-            dialog_button_2->checkInput(w);
+            if (dialog_button_2->message.empty())
+            {
+                dialog_button_1->position =
+                    glm::vec2{ (dialog_prompt->size.x * 0.5f) - (dialog_button_1->size.x / 2.0f),
+                        dialog_prompt->size.y - (dialog_button_1->size.y + 12.0f) } +
+                    dialog_prompt->position;
 
-            dialog_button_1->draw(r);
-            dialog_button_2->draw(r);
+                dialog_button_1->checkInput(w);
+                dialog_button_1->draw(r);
+            }
+            else
+            {
+                dialog_button_1->position =
+                    glm::vec2{ (dialog_prompt->size.x * 0.25f) - (dialog_button_1->size.x / 2.0f),
+                        dialog_prompt->size.y - (dialog_button_1->size.y + 12.0f) } +
+                    dialog_prompt->position;
+                dialog_button_2->position =
+                    glm::vec2{ (dialog_prompt->size.x * 0.75f) - (dialog_button_2->size.x / 2.0f),
+                        dialog_prompt->size.y - (dialog_button_2->size.y + 12.0f) } +
+                    dialog_prompt->position;
+
+                dialog_button_1->checkInput(w);
+                dialog_button_2->checkInput(w);
+                dialog_button_1->draw(r);
+                dialog_button_2->draw(r);
+            }
         }
+
+        if (w->wasShortcutTriggered("new_file") && !is_modal) fileNew();
+        if (w->wasShortcutTriggered("open_file") && !is_modal) fileOpen();
+        if (w->wasShortcutTriggered("export_file") && !is_modal) fileExport();
+        if (w->wasShortcutTriggered("save_file") && !is_modal) fileSave();
+        if (w->wasShortcutTriggered("save_as") && !is_modal) fileSaveAs();
+        if (w->wasShortcutTriggered("save_incremental") && !is_modal) fileSaveIncremental();
+        if (w->shouldClose() && !is_modal) fileQuit();
 
         w->clearMouseEvents();
         w->clearKeyEvents();
@@ -106,147 +127,6 @@ void Application::initCore()
     r  = std::make_shared<UIRenderer>();
     r2 = std::make_shared<UIRenderer>(1);
     d  = std::make_shared<Document>();
-}
-
-void Application::initMenus()
-{
-    root_menu = std::make_shared<UIRootMenu>();
-    root_menu->addLabel("", 12);
-
-    {
-        file_menu = root_menu->addSubMenu("file");
-        // TODO: check for unsaved changes!
-        file_menu->addButton(
-            "new",
-            [&]() -> void
-            {
-                if (d->hasUnsavedChanges())
-                {
-                    triggerModal(
-                        "unsaved changes",
-                        "you have unsaved changes. do you want do discard them? they will be lost forever!",
-                        7, { 320, 140 }, "cancel", [&]() { is_modal = false; }, -1, "discard",
-                        [&]()
-                        {
-                            d                        = std::make_shared<Document>();
-                            text_editor->data_source = d;
-                            text_editor->refresh();
-                            is_modal = false;
-                        },
-                        7);
-                }
-                else
-                {
-                    d                        = std::make_shared<Document>();
-                    text_editor->data_source = d;
-                }
-            },
-            "Ctrl+N");
-        file_menu->addButton("open...", []() -> void { std::cout << "open" << std::endl; }, "Ctrl+O", 14);
-        std::shared_ptr<UIMenu> recents = file_menu->addSubMenu("open recent");
-        recents->addButton("item 1", []() -> void { std::cout << "test" << std::endl; });
-        recents->addButton("item 2", nullptr);
-        recents->addButton("item 3", nullptr);
-        recents->addButton("item 4", nullptr);
-        file_menu->addButton("export...", nullptr, "Ctrl+E", 13);
-        file_menu->addButton("save", nullptr, "Ctrl+S", 11);
-        file_menu->addButton("save as...", nullptr, "", 11);
-        file_menu->addButton("save incremental", nullptr, "Ctrl+Alt+I", 11);
-        file_menu->addButton("revert", nullptr, "", 15);
-        file_menu->addDivider();
-        file_menu->addButton("exit", []() -> void { exit(EXIT_FAILURE); }, "Alt+F4");
-    }
-
-    {
-        edit_menu = root_menu->addSubMenu("edit");
-        edit_menu->addButton("copy", [&]() { w->triggerShortcut("copy"); }, "Ctrl+C");
-        w->registerShortcut("copy", KeyEvent::CTRL, 'C');
-        edit_menu->addButton("cut", [&]() { w->triggerShortcut("cut"); }, "Ctrl+X");
-        w->registerShortcut("cut", KeyEvent::CTRL, 'X');
-        edit_menu->addButton("paste", [&]() { w->triggerShortcut("paste"); }, "Ctrl+V");
-        w->registerShortcut("paste", KeyEvent::CTRL, 'V');
-        edit_menu->addDivider();
-        undo_button = edit_menu->addButton("undo", [&]() { w->triggerShortcut("undo"); }, "Ctrl+Z");
-        w->registerShortcut("undo", KeyEvent::CTRL, 'Z');
-        redo_button = edit_menu->addButton("redo", [&]() { w->triggerShortcut("redo"); }, "Ctrl+Shft+Z");
-        w->registerShortcut("redo", (KeyEvent::Modifier)(KeyEvent::CTRL | KeyEvent::SHIFT), 'Z');
-        edit_menu->addDivider();
-        edit_menu->addButton("select all", [&]() { w->triggerShortcut("select_all"); }, "Ctrl+A");
-        w->registerShortcut("select_all", KeyEvent::CTRL, 'A');
-        edit_menu->addButton(
-            "select paragraph", [&]() { w->triggerShortcut("select_paragraph"); }, "Ctrl+Shft+A");
-        w->registerShortcut("select_paragraph", (KeyEvent::Modifier)(KeyEvent::CTRL | KeyEvent::SHIFT),
-            'A');
-        edit_menu->addDivider();
-        edit_menu->addButton("format", nullptr, "Alt+Shft+F");
-        w->registerShortcut("format", (KeyEvent::Modifier)(KeyEvent::ALT | KeyEvent::SHIFT), 'F');
-        edit_menu->addDivider();
-        edit_menu->addButton("settings", nullptr, "Ctrl+,");
-        w->registerShortcut("settings", KeyEvent::CTRL, ',');
-    }
-
-    {
-        scripts_menu = root_menu->addSubMenu("scripts");
-        scripts_menu->addLabel("you have no scripts.", 7);
-    }
-
-    {
-        view_menu = root_menu->addSubMenu("view");
-        view_menu->addButton(
-            "show palette",
-            [&]()
-            {
-                show_palette = !show_palette;
-                updateViewIcons();
-            },
-            "Alt+P");
-        view_menu->addButton(
-            "show raw view",
-            [&]()
-            {
-                show_raw_editor = !show_raw_editor;
-                updateViewIcons();
-            },
-            "Alt+R");
-        view_menu->addButton("show metrics", nullptr, "Alt+M");
-        w->registerShortcut("toggle_metrics", KeyEvent::ALT, 'M');
-        view_menu->addButton("show guides", nullptr, "Alt+G");
-        w->registerShortcut("toggle_guides", KeyEvent::ALT, 'G');
-        view_menu->addDivider();
-        std::shared_ptr<UIMenu> view_layouts = view_menu->addSubMenu("reset layout", 15);
-        view_layouts->addButton("side-by-side", [&]() { setSideBySideLayout(); });
-        view_layouts->addButton("top-to-bottom", [&]() { setTopToBottomLayout(); });
-        view_menu->addButton("swap layout",
-            [&]() -> void
-            {
-                glm::vec2 tmp            = raw_editor->position;
-                glm::vec2 tmp2           = raw_editor->size;
-                raw_editor->position     = preview_editor->position;
-                raw_editor->size         = preview_editor->size;
-                preview_editor->position = tmp;
-                preview_editor->size     = tmp2;
-            });
-    }
-
-    {
-        std::shared_ptr<UIMenu> help_menu = root_menu->addSubMenu("help");
-        help_menu->addButton("about", nullptr);
-        help_menu->addDivider();
-        help_menu->addButton(
-            "repository",
-            []() -> void
-            {
-#if defined(_WIN32)
-                system("start https://github.com/oculometric/typesetter-project");
-#else
-                system("xdg-open https://github.com/oculometric/typesetter-project");
-#endif
-            },
-            "", 13);
-    }
-
-    root_menu->addButton("test", []() -> void { std::cout << "test" << std::endl; });
-    updateViewIcons();
 }
 
 void Application::initEditors()
@@ -338,15 +218,23 @@ void Application::triggerModal(const std::string& title, const std::string& mess
 
     dialog_button_1->message       = button_1;
     dialog_button_1->icon_index    = button_1_icon;
-    dialog_button_1->callback_func = button_1_callback;
-    dialog_button_1->z             = 8.0f;
+    dialog_button_1->callback_func = [button_1_callback, this]()
+    {
+        if (button_1_callback) button_1_callback();
+        is_modal = false;
+    };
+    dialog_button_1->z = 8.0f;
 
     if (!button_2.empty())
     {
         dialog_button_2->message       = button_2;
         dialog_button_2->icon_index    = button_2_icon;
-        dialog_button_2->callback_func = button_2_callback;
-        dialog_button_2->z             = 8.0f;
+        dialog_button_2->callback_func = [button_2_callback, this]()
+        {
+            if (button_2_callback) button_2_callback();
+            is_modal = false;
+        };
+        dialog_button_2->z = 8.0f;
     }
     else
         dialog_button_2->message = "";

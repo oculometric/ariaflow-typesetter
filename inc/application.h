@@ -75,6 +75,15 @@ private:
         glm::vec2 size, const std::string& button_1, std::function<void(void)> button_1_callback,
         int button_1_icon, const std::string& button_2, std::function<void(void)> button_2_callback,
         int button_2_icon);
+
+    void fileNew();
+    void fileOpen();
+    void fileExport();
+    void fileSave();
+    void fileSaveAs();
+    void fileSaveIncremental();
+    void fileRevert();
+    void fileQuit();
 };
 
 } // namespace AriaFlow

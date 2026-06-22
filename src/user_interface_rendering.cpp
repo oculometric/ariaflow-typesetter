@@ -514,11 +514,11 @@ void UIRenderer::updateTextSingleLine(glm::vec2 position, TextFormatting formatt
         }
 
         glm::vec3 colour = { 1, 1, 1 };
-        for (const auto& [offset, col] : colours)
+        for (auto it = colours.begin(); it != colours.end(); ++it)
         {
-            if (char_index >= offset)
+            if (char_index >= it->first && (it + 1 == colours.end() || char_index < (it + 1)->first))
             {
-                colour = col;
+                colour = it->second;
                 break;
             }
         }

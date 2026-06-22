@@ -24,6 +24,14 @@ namespace AriaFlow
 
 class Document
 {
+public:
+    struct Line
+    {
+        size_t start;
+        size_t end;
+        std::vector<std::pair<size_t, int>> colours;
+    };
+
 private:
     std::string path;
     std::string data;
@@ -51,7 +59,7 @@ public:
     bool saveIncremental();
     void revert();
 
-    std::vector<std::pair<size_t, size_t>> splitToLines(size_t chars_per_line) const;
+    std::vector<Line> splitToLines(size_t chars_per_line) const;
     std::vector<uint32_t> parse() const;
     void format();
 

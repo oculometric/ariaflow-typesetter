@@ -169,11 +169,11 @@ bool isWhitespace(char c)
     return false;
 }
 
-std::vector<std::pair<size_t, size_t>> Document::splitToLines(size_t chars_per_line) const
+std::vector<Document::Line> Document::splitToLines(size_t chars_per_line) const
 {
     size_t current    = 0;
     size_t line_start = 0;
-    std::vector<std::pair<size_t, size_t>> lines;
+    std::vector<Line> lines;
 
     while (current < data.size())
     {
@@ -200,6 +200,16 @@ std::vector<std::pair<size_t, size_t>> Document::splitToLines(size_t chars_per_l
         ++current;
     }
     lines.emplace_back(line_start, current);
+
+    for (auto& line : lines)
+    {
+        line.colours.emplace_back(0, 0);
+        size_t ind = 0;
+        for (size_t i = line.start; i < line.end; ++i, ++ind)
+        {
+            if (data[i] == ' ') { line.colours.emplace_back(ind, rand() % 4); }
+        }
+    }
 
     return lines;
 }

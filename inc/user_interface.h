@@ -1,5 +1,6 @@
 #pragma once
 
+#include "document.h"
 #include "window.h"
 
 #include <functional>
@@ -138,8 +139,8 @@ public:
 private:
     bool isBackingValid(const BackingData& backing_ref);
     void addBacking(BackingData& backing_ref, BackingDataInternal backing);
-    void updateTextSingleLine(glm::vec2 position, TextFormatting formatting, const std::string& text, size_t text_offset,
-        std::vector<std::pair<size_t, glm::vec3>> colours, BackingDataInternal backing);
+    void updateTextSingleLine(glm::vec2 position, TextFormatting formatting, const std::string& text,
+        size_t text_offset, std::vector<std::pair<size_t, glm::vec3>> colours, BackingDataInternal backing);
     void updateQuad(glm::vec2 p1, glm::vec2 p2, glm::vec2 p3, glm::vec2 p4, glm::vec2 uv_tl,
         glm::vec2 uv_br, glm::vec4 colour_1, glm::vec4 colour_2, glm::vec4 data_1, glm::vec4 data_2,
         BackingDataInternal backing);
@@ -394,8 +395,6 @@ public:
     void calculateContentArea(glm::vec2& offset, glm::vec2& dimension);
 };
 
-class Document;
-
 class UITextEditor : public UIElement
 {
 public:
@@ -404,7 +403,7 @@ public:
 
 private:
     std::string text;
-    std::vector<std::pair<size_t, size_t>> lines;
+    std::vector<Document::Line> lines;
     size_t cursor_index              = 0;
     size_t cursor_line               = 0;
     size_t cursor_column             = 0;

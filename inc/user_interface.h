@@ -415,7 +415,7 @@ private:
     float right_margin = 12.0f;
     float scroll       = 0.0f;
     std::string copy_buffer;
-    bool mouse_down_event_received = false;
+    bool mouse_select_started = false;
 
 public:
     UITextEditor()                            = default;
@@ -443,11 +443,16 @@ private:
     float findIndexOffset(size_t index, size_t line_start);
     void scrollCursorOnscreen();
     float getContentWidth();
+
+    void stepDown(bool jump_to_newline, bool preserve_selection, bool move_scroll);
+    void stepUp(bool jump_to_newline, bool preserve_selection, bool move_scroll);
+    void stepRight(bool jump_to_space, bool preserve_selection);
+    void stepLeft(bool jump_to_space, bool preserve_selection);
+    void stepHome(bool preserve_selection);
+    void stepEnd(bool preserve_selection);
 };
 
 bool insideRect(glm::vec2 point, glm::vec2 top_left, glm::vec2 size);
-bool checkForMouseDown(std::shared_ptr<Window> w);
-bool checkForMouseUp(std::shared_ptr<Window> w);
 void trackWindowResizeFixedSize(std::shared_ptr<Window> w, glm::vec2& top_left, glm::vec2 size);
 void trackWindowResizeScaleSize(std::shared_ptr<Window> w, glm::vec2& top_left, glm::vec2& size);
 

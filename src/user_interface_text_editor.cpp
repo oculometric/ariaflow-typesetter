@@ -115,12 +115,13 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
     glm::vec2 mouse = w->getMousePosition();
     if (insideRect(mouse, position, size))
     {
-        auto evt = w->getCharEvent();
-        while (evt != 0)
+        // tappy typies
+        auto char_event = w->getCharEvent();
+        while (char_event != 0)
         {
             data_source->pushHistory();
             eraseSelection();
-            data_source->getData().insert(data_source->getData().begin() + cursor_index, (char)evt);
+            data_source->getData().insert(data_source->getData().begin() + cursor_index, (char)char_event);
             ++cursor_index;
             updateLines();
             auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
@@ -128,216 +129,68 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
             cursor_line   = b;
             updateCursorIndex(false);
             scrollCursorOnscreen();
-            evt = w->getCharEvent();
+            char_event = w->getCharEvent();
         }
 
-        auto evt2 = w->getKeyEvent();
-        while (evt2.key != 0)
+        // navigation
+        if (InputResult i = w->wasKeyPressed(KEY_DOWN))
+            stepDown(i.modifiers & MODIFIER_CTRL, i.modifiers & MODIFIER_SHIFT, i.modifiers & MODIFIER_ALT);
+        if (InputResult i = w->wasKeyPressed(KEY_KP_2))
         {
-            if (!(evt2.pressed || evt2.repeat))
-            {
-                evt2 = w->getKeyEvent();
-                continue;
-            }
-            if (evt2.key == KeyEvent::KEY_DOWN ||
-                (evt2.key == KeyEvent::KEY_KP_2 && !(evt2.modifiers & KeyEvent::NUM)))
-            {
-                if (evt2.modifiers & KeyEvent::CTRL)
-                {
-                    if (cursor_index == data_source->getData().size()) {}
-                    else
-                    {
-                        ++cursor_index;
-                        while (cursor_index < data_source->getData().size() &&
-                               data_source->getData()[cursor_index - 1] != '\n')
-                            ++cursor_index;
-                    }
-                    auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
-                    cursor_column = a;
-                    cursor_line   = b;
-                    updateCursorIndex(false);
-                    scrollCursorOnscreen();
-                }
-                else
-                {
-                    if (cursor_line == lines.size() - 1 && !lines.empty())
-                    {
-                        cursor_column = lines[cursor_line].end;
-                    }
-                    cursor_line = glm::min(cursor_line + 1, lines.size() - 1);
-                    updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
-                    scrollCursorOnscreen();
-                    if (evt2.modifiers & KeyEvent::ALT) scroll += line_height;
-                }
-            }
-            if (evt2.key == KeyEvent::KEY_UP ||
-                (evt2.key == KeyEvent::KEY_KP_8 && !(evt2.modifiers & KeyEvent::NUM)))
-            {
-                if (evt2.modifiers & KeyEvent::CTRL)
-                {
-                    if (cursor_index == data_source->getData().size()) {}
-                    else
-                    {
-                        --cursor_index;
-                        while (cursor_index > 0 && data_source->getData()[cursor_index - 1] != '\n')
-                            --cursor_index;
-                    }
-                    auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
-                    cursor_column = a;
-                    cursor_line   = b;
-                    updateCursorIndex(false);
-                    scrollCursorOnscreen();
-                }
-                else
-                {
-                    if (cursor_line > 0) --cursor_line;
-                    updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
-                    scrollCursorOnscreen();
-                    if (evt2.modifiers & KeyEvent::ALT) scroll -= line_height;
-                }
-            }
-            if (evt2.key == KeyEvent::KEY_RIGHT ||
-                (evt2.key == KeyEvent::KEY_KP_6 && !(evt2.modifiers & KeyEvent::NUM)))
-            {
-                if (evt2.modifiers & KeyEvent::CTRL)
-                {
-                    cursor_index  = data_source->findNextWord(cursor_index);
-                    auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
-                    cursor_column = a;
-                    cursor_line   = b;
-                    updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
-                    scrollCursorOnscreen();
-                }
-                else
-                {
-                    size_t line_length = 0;
-                    if (cursor_line < lines.size())
-                        line_length = lines[cursor_line].end - lines[cursor_line].start;
-                    size_t effective_cursor_column = glm::min(line_length, cursor_column);
-                    if (effective_cursor_column == line_length)
-                    {
-                        if (cursor_line < lines.size() - 1)
-                        {
-                            ++cursor_line;
-                            cursor_column = 0;
-                        }
-                        else
-                            cursor_column = effective_cursor_column;
-                    }
-                    else
-                        ++cursor_column;
-                    updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
-                    scrollCursorOnscreen();
-                }
-            }
-            if (evt2.key == KeyEvent::KEY_LEFT ||
-                (evt2.key == KeyEvent::KEY_KP_4 && !(evt2.modifiers & KeyEvent::NUM)))
-            {
-                if (evt2.modifiers & KeyEvent::CTRL)
-                {
-                    cursor_index  = data_source->findPrevWord(cursor_index);
-                    auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
-                    cursor_column = a;
-                    cursor_line   = b;
-                    updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
-                    scrollCursorOnscreen();
-                }
-                else
-                {
-                    size_t line_length = 0;
-                    if (cursor_line < lines.size())
-                        line_length = lines[cursor_line].end - lines[cursor_line].start;
-                    size_t effective_cursor_column = glm::min(line_length, cursor_column);
-                    if (effective_cursor_column == 0)
-                    {
-                        if (cursor_line > 0)
-                        {
-                            --cursor_line;
-                            cursor_column = lines[cursor_line].end - lines[cursor_line].start;
-                        }
-                        else
-                            cursor_column = effective_cursor_column;
-                    }
-                    else
-                        cursor_column = effective_cursor_column - 1;
-                    updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
-                    scrollCursorOnscreen();
-                }
-            }
-            if (evt2.key == KeyEvent::KEY_HOME ||
-                (evt2.key == KeyEvent::KEY_KP_7 && !(evt2.modifiers & KeyEvent::NUM)))
-            {
-                cursor_column = 0;
-                cursor_line   = 0;
-                updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
-                scrollCursorOnscreen();
-            }
-            if (evt2.key == KeyEvent::KEY_END ||
-                (evt2.key == KeyEvent::KEY_KP_1 && !(evt2.modifiers & KeyEvent::NUM)))
-            {
-                if (lines.empty())
-                {
-                    cursor_line   = 0;
-                    cursor_column = 0;
-                }
-                else
-                {
-                    cursor_line   = lines.size() - 1;
-                    cursor_column = lines[cursor_line].end;
-                }
-                updateCursorIndex(evt2.modifiers & KeyEvent::SHIFT);
-                scrollCursorOnscreen();
-            }
-            if (evt2.key == KeyEvent::KEY_ESCAPE)
-            {
-                updateCursorIndex(false);
-                scrollCursorOnscreen();
-            }
-            if (evt2.key == KeyEvent::KEY_BACKSPACE)
-            {
-                if (cursor_index != selection_other_end_index)
-                {
-                    data_source->pushHistory();
-                    eraseSelection();
-                }
-                else if (cursor_index > 0)
-                {
-                    data_source->pushHistory();
-                    data_source->getData().erase(data_source->getData().begin() + cursor_index - 1);
-                    --cursor_index;
-                    updateLines();
-                    auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
-                    cursor_column = a;
-                    cursor_line   = b;
-                    updateCursorIndex(false);
-                    scrollCursorOnscreen();
-                }
-            }
-            if (evt2.key == KeyEvent::KEY_DELETE)
-            {
-                if (cursor_index != selection_other_end_index)
-                {
-                    data_source->pushHistory();
-                    eraseSelection();
-                }
-                else if (cursor_index < data_source->getData().size())
-                {
-                    data_source->pushHistory();
-                    data_source->getData().erase(data_source->getData().begin() + cursor_index);
-                    updateLines();
-                    auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
-                    cursor_column = a;
-                    cursor_line   = b;
-                    updateCursorIndex(false);
-                    scrollCursorOnscreen();
-                }
-            }
-            if (evt2.key == KeyEvent::KEY_ENTER)
+            if (!(i.modifiers & MODIFIER_NUM))
+                stepDown(i.modifiers & MODIFIER_CTRL, i.modifiers & MODIFIER_SHIFT,
+                    i.modifiers & MODIFIER_ALT);
+        }
+        if (InputResult i = w->wasKeyPressed(KEY_UP))
+            stepUp(i.modifiers & MODIFIER_CTRL, i.modifiers & MODIFIER_SHIFT, i.modifiers & MODIFIER_ALT);
+        if (InputResult i = w->wasKeyPressed(KEY_KP_8))
+        {
+            if (!(i.modifiers & MODIFIER_NUM))
+                stepUp(i.modifiers & MODIFIER_CTRL, i.modifiers & MODIFIER_SHIFT,
+                    i.modifiers & MODIFIER_ALT);
+        }
+        if (InputResult i = w->wasKeyPressed(KEY_RIGHT))
+            stepRight(i.modifiers & MODIFIER_CTRL, i.modifiers & MODIFIER_SHIFT);
+        if (InputResult i = w->wasKeyPressed(KEY_KP_6))
+        {
+            if (!(i.modifiers & MODIFIER_NUM))
+                stepRight(i.modifiers & MODIFIER_CTRL, i.modifiers & MODIFIER_SHIFT);
+        }
+        if (InputResult i = w->wasKeyPressed(KEY_LEFT))
+            stepLeft(i.modifiers & MODIFIER_CTRL, i.modifiers & MODIFIER_SHIFT);
+        if (InputResult i = w->wasKeyPressed(KEY_KP_4))
+        {
+            if (!(i.modifiers & MODIFIER_NUM))
+                stepLeft(i.modifiers & MODIFIER_CTRL, i.modifiers & MODIFIER_SHIFT);
+        }
+        if (InputResult i = w->wasKeyPressed(KEY_HOME)) stepHome(i.modifiers & MODIFIER_SHIFT);
+        if (InputResult i = w->wasKeyPressed(KEY_KP_7))
+        {
+            if (!(i.modifiers & MODIFIER_NUM)) stepHome(i.modifiers & MODIFIER_SHIFT);
+        }
+        if (InputResult i = w->wasKeyPressed(KEY_END)) stepEnd(i.modifiers & MODIFIER_SHIFT);
+        if (InputResult i = w->wasKeyPressed(KEY_KP_1))
+        {
+            if (!(i.modifiers & MODIFIER_NUM)) stepEnd(i.modifiers & MODIFIER_SHIFT);
+        }
+
+        if (w->wasKeyPressed(KEY_ESCAPE))
+        {
+            updateCursorIndex(false);
+            scrollCursorOnscreen();
+        }
+        if (w->wasKeyPressed(KEY_BACKSPACE))
+        {
+            if (cursor_index != selection_other_end_index)
             {
                 data_source->pushHistory();
                 eraseSelection();
-                data_source->getData().insert(data_source->getData().begin() + cursor_index, '\n');
-                ++cursor_index;
+            }
+            else if (cursor_index > 0)
+            {
+                data_source->pushHistory();
+                data_source->getData().erase(data_source->getData().begin() + cursor_index - 1);
+                --cursor_index;
                 updateLines();
                 auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
                 cursor_column = a;
@@ -345,14 +198,18 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                 updateCursorIndex(false);
                 scrollCursorOnscreen();
             }
-            if (evt2.key == KeyEvent::KEY_TAB)
+        }
+        if (w->wasKeyPressed(KEY_DELETE))
+        {
+            if (cursor_index != selection_other_end_index)
             {
                 data_source->pushHistory();
                 eraseSelection();
-                size_t diff   = 4 - (cursor_column % 4);
-                std::string s = std::string(diff, ' ');
-                data_source->getData().insert(cursor_index, s);
-                cursor_index += diff;
+            }
+            else if (cursor_index < data_source->getData().size())
+            {
+                data_source->pushHistory();
+                data_source->getData().erase(data_source->getData().begin() + cursor_index);
                 updateLines();
                 auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
                 cursor_column = a;
@@ -360,19 +217,47 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
                 updateCursorIndex(false);
                 scrollCursorOnscreen();
             }
-            evt2 = w->getKeyEvent();
         }
-
-        if (!mouse_down_event_received && checkForMouseDown(w))
+        if (w->wasKeyPressed(KEY_ENTER))
         {
-            mouse_down_event_received = true;
-            auto [a, b]               = findCursorPlacement(mouse);
-            cursor_column             = a;
-            cursor_line               = b;
-            updateCursorIndex(w->isKeyDown(KeyEvent::KEY_LEFT_SHIFT));
+            data_source->pushHistory();
+            eraseSelection();
+            data_source->getData().insert(data_source->getData().begin() + cursor_index, '\n');
+            ++cursor_index;
+            updateLines();
+            auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+            cursor_column = a;
+            cursor_line   = b;
+            updateCursorIndex(false);
+            scrollCursorOnscreen();
+        }
+        if (w->wasKeyPressed(KEY_TAB))
+        {
+            data_source->pushHistory();
+            eraseSelection();
+            size_t diff   = 4 - (cursor_column % 4);
+            std::string s = std::string(diff, ' ');
+            data_source->getData().insert(cursor_index, s);
+            cursor_index += diff;
+            updateLines();
+            auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+            cursor_column = a;
+            cursor_line   = b;
+            updateCursorIndex(false);
+            scrollCursorOnscreen();
         }
 
-        if (w->isMouseDown(KeyEvent::MOUSE_LEFT) && mouse_down_event_received)
+        InputResult i = w->wasMousePressed(MOUSE_LEFT);
+        if (!mouse_select_started && i)
+        {
+            mouse_select_started = true;
+            auto [a, b]          = findCursorPlacement(mouse);
+            cursor_column        = a;
+            cursor_line          = b;
+            updateCursorIndex(i.modifiers & MODIFIER_SHIFT);
+        }
+
+        if (w->isMouseDown(MOUSE_LEFT) && mouse_select_started)
         {
             auto [a, b]   = findCursorPlacement(mouse);
             cursor_column = a;
@@ -380,7 +265,7 @@ void UITextEditor::checkInput(std::shared_ptr<Window> w)
             updateCursorIndex(true);
         }
         else
-            mouse_down_event_received = false;
+            mouse_select_started = false;
 
         w->setCursorType(CursorType::CURSOR_TEXT, 1);
 
@@ -618,3 +503,146 @@ void UITextEditor::scrollCursorOnscreen()
 }
 
 float UITextEditor::getContentWidth() { return size.x - (left_margin + right_margin); }
+
+void UITextEditor::stepDown(bool jump_to_newline, bool preserve_selection, bool move_scroll)
+{
+    if (jump_to_newline)
+    {
+        if (cursor_index == data_source->getData().size()) {}
+        else
+        {
+            ++cursor_index;
+            while (cursor_index < data_source->getData().size() &&
+                   data_source->getData()[cursor_index - 1] != '\n')
+                ++cursor_index;
+        }
+        auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+        cursor_column = a;
+        cursor_line   = b;
+        updateCursorIndex(preserve_selection);
+        scrollCursorOnscreen();
+    }
+    else
+    {
+        if (cursor_line == lines.size() - 1 && !lines.empty()) { cursor_column = lines[cursor_line].end; }
+        cursor_line = glm::min(cursor_line + 1, lines.size() - 1);
+        updateCursorIndex(preserve_selection);
+        scrollCursorOnscreen();
+        if (move_scroll) scroll += line_height;
+    }
+}
+
+void UITextEditor::stepUp(bool jump_to_newline, bool preserve_selection, bool move_scroll)
+{
+    if (jump_to_newline)
+    {
+        if (cursor_index == data_source->getData().size()) {}
+        else
+        {
+            --cursor_index;
+            while (cursor_index > 0 && data_source->getData()[cursor_index - 1] != '\n') --cursor_index;
+        }
+        auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+        cursor_column = a;
+        cursor_line   = b;
+        updateCursorIndex(preserve_selection);
+        scrollCursorOnscreen();
+    }
+    else
+    {
+        if (cursor_line > 0) --cursor_line;
+        updateCursorIndex(preserve_selection);
+        scrollCursorOnscreen();
+        if (move_scroll) scroll -= line_height;
+    }
+}
+
+void UITextEditor::stepRight(bool jump_to_space, bool preserve_selection)
+{
+    if (jump_to_space)
+    {
+        cursor_index  = data_source->findNextWord(cursor_index);
+        auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+        cursor_column = a;
+        cursor_line   = b;
+        updateCursorIndex(preserve_selection);
+        scrollCursorOnscreen();
+    }
+    else
+    {
+        size_t line_length = 0;
+        if (cursor_line < lines.size()) line_length = lines[cursor_line].end - lines[cursor_line].start;
+        size_t effective_cursor_column = glm::min(line_length, cursor_column);
+        if (effective_cursor_column == line_length)
+        {
+            if (cursor_line < lines.size() - 1)
+            {
+                ++cursor_line;
+                cursor_column = 0;
+            }
+            else
+                cursor_column = effective_cursor_column;
+        }
+        else
+            ++cursor_column;
+        updateCursorIndex(preserve_selection);
+        scrollCursorOnscreen();
+    }
+}
+
+void UITextEditor::stepLeft(bool jump_to_space, bool preserve_selection)
+{
+    if (jump_to_space)
+    {
+        cursor_index  = data_source->findPrevWord(cursor_index);
+        auto [a, b]   = calculateColumnLineFromIndex(cursor_index);
+        cursor_column = a;
+        cursor_line   = b;
+        updateCursorIndex(preserve_selection);
+        scrollCursorOnscreen();
+    }
+    else
+    {
+        size_t line_length = 0;
+        if (cursor_line < lines.size()) line_length = lines[cursor_line].end - lines[cursor_line].start;
+        size_t effective_cursor_column = glm::min(line_length, cursor_column);
+        if (effective_cursor_column == 0)
+        {
+            if (cursor_line > 0)
+            {
+                --cursor_line;
+                cursor_column = lines[cursor_line].end - lines[cursor_line].start;
+            }
+            else
+                cursor_column = effective_cursor_column;
+        }
+        else
+            cursor_column = effective_cursor_column - 1;
+        updateCursorIndex(preserve_selection);
+        scrollCursorOnscreen();
+    }
+}
+
+void UITextEditor::stepHome(bool preserve_selection)
+{
+    cursor_column = 0;
+    cursor_line   = 0;
+    updateCursorIndex(preserve_selection);
+    scrollCursorOnscreen();
+}
+
+void UITextEditor::stepEnd(bool preserve_selection)
+{
+    if (lines.empty())
+    {
+        cursor_line   = 0;
+        cursor_column = 0;
+    }
+    else
+    {
+        cursor_line   = lines.size() - 1;
+        cursor_column = lines[cursor_line].end;
+    }
+    updateCursorIndex(preserve_selection);
+    scrollCursorOnscreen();
+}

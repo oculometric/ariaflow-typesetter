@@ -17,9 +17,9 @@ void Application::initMenus()
     {
         file_menu = root_menu->addSubMenu("file");
         file_menu->addButton("new", [&]() -> void { fileNew(); }, "Ctrl+N");
-        w->registerShortcut("new_file", KeyEvent::CTRL, 'N');
+        w->registerShortcut("new_file", MODIFIER_CTRL, 'N');
         file_menu->addButton("open...", [&]() -> void { fileOpen(); }, "Ctrl+O", 14);
-        w->registerShortcut("open_file", KeyEvent::CTRL, 'O');
+        w->registerShortcut("open_file", MODIFIER_CTRL, 'O');
         std::shared_ptr<UIMenu> recents = file_menu->addSubMenu("open recent");
         // TODO: open recents history
         recents->addButton("item 1", []() -> void { std::cout << "test" << std::endl; });
@@ -28,14 +28,14 @@ void Application::initMenus()
         recents->addButton("item 4", nullptr);
         file_menu->addDivider();
         file_menu->addButton("export...", [&]() -> void { fileExport(); }, "Ctrl+E", 13);
-        w->registerShortcut("export_file", KeyEvent::CTRL, 'E');
+        w->registerShortcut("export_file", MODIFIER_CTRL, 'E');
         file_menu->addButton("save", [&]() -> void { fileSave(); }, "Ctrl+S", 11);
-        w->registerShortcut("save_file", KeyEvent::CTRL, 'S');
+        w->registerShortcut("save_file", MODIFIER_CTRL, 'S');
         file_menu->addButton("save as...", [&]() -> void { fileSaveAs(); }, "Ctrl+Shft+S", 11);
-        w->registerShortcut("save_as", (KeyEvent::Modifier)(KeyEvent::CTRL | KeyEvent::SHIFT), 'S');
+        w->registerShortcut("save_as", MODIFIER_CTRL | MODIFIER_SHIFT, 'S');
         file_menu->addButton(
             "save incremental", [&]() -> void { fileSaveIncremental(); }, "Ctrl+Alt+S", 11);
-        w->registerShortcut("save_incremental", (KeyEvent::Modifier)(KeyEvent::CTRL | KeyEvent::ALT), 'S');
+        w->registerShortcut("save_incremental", MODIFIER_CTRL | MODIFIER_ALT, 'S');
         file_menu->addButton("revert", [&]() -> void { fileRevert(); }, "", 15);
         file_menu->addDivider();
         file_menu->addButton("exit", [&]() -> void { fileQuit(); }, "Alt+F4");
@@ -44,29 +44,28 @@ void Application::initMenus()
     {
         edit_menu = root_menu->addSubMenu("edit");
         edit_menu->addButton("copy", [&]() { w->triggerShortcut("copy"); }, "Ctrl+C");
-        w->registerShortcut("copy", KeyEvent::CTRL, 'C');
+        w->registerShortcut("copy", MODIFIER_CTRL, 'C');
         edit_menu->addButton("cut", [&]() { w->triggerShortcut("cut"); }, "Ctrl+X");
-        w->registerShortcut("cut", KeyEvent::CTRL, 'X');
+        w->registerShortcut("cut", MODIFIER_CTRL, 'X');
         edit_menu->addButton("paste", [&]() { w->triggerShortcut("paste"); }, "Ctrl+V");
-        w->registerShortcut("paste", KeyEvent::CTRL, 'V');
+        w->registerShortcut("paste", MODIFIER_CTRL, 'V');
         edit_menu->addDivider();
         undo_button = edit_menu->addButton("undo", [&]() { w->triggerShortcut("undo"); }, "Ctrl+Z");
-        w->registerShortcut("undo", KeyEvent::CTRL, 'Z');
+        w->registerShortcut("undo", MODIFIER_CTRL, 'Z');
         redo_button = edit_menu->addButton("redo", [&]() { w->triggerShortcut("redo"); }, "Ctrl+Shft+Z");
-        w->registerShortcut("redo", (KeyEvent::Modifier)(KeyEvent::CTRL | KeyEvent::SHIFT), 'Z');
+        w->registerShortcut("redo", MODIFIER_CTRL | MODIFIER_SHIFT, 'Z');
         edit_menu->addDivider();
         edit_menu->addButton("select all", [&]() { w->triggerShortcut("select_all"); }, "Ctrl+A");
-        w->registerShortcut("select_all", KeyEvent::CTRL, 'A');
+        w->registerShortcut("select_all", MODIFIER_CTRL, 'A');
         edit_menu->addButton(
             "select paragraph", [&]() { w->triggerShortcut("select_paragraph"); }, "Ctrl+Shft+A");
-        w->registerShortcut("select_paragraph", (KeyEvent::Modifier)(KeyEvent::CTRL | KeyEvent::SHIFT),
-            'A');
+        w->registerShortcut("select_paragraph", MODIFIER_CTRL | MODIFIER_SHIFT, 'A');
         edit_menu->addDivider();
         edit_menu->addButton("format", nullptr, "Alt+Shft+F");
-        w->registerShortcut("format", (KeyEvent::Modifier)(KeyEvent::ALT | KeyEvent::SHIFT), 'F');
+        w->registerShortcut("format", MODIFIER_ALT | MODIFIER_SHIFT, 'F');
         edit_menu->addDivider();
         edit_menu->addButton("settings", nullptr, "Ctrl+,");
-        w->registerShortcut("settings", KeyEvent::CTRL, ',');
+        w->registerShortcut("settings", MODIFIER_CTRL, ',');
     }
 
     {
@@ -93,9 +92,9 @@ void Application::initMenus()
             },
             "Alt+R");
         view_menu->addButton("show metrics", nullptr, "Alt+M");
-        w->registerShortcut("toggle_metrics", KeyEvent::ALT, 'M');
+        w->registerShortcut("toggle_metrics", MODIFIER_ALT, 'M');
         view_menu->addButton("show guides", nullptr, "Alt+G");
-        w->registerShortcut("toggle_guides", KeyEvent::ALT, 'G');
+        w->registerShortcut("toggle_guides", MODIFIER_ALT, 'G');
         view_menu->addDivider();
         std::shared_ptr<UIMenu> view_layouts = view_menu->addSubMenu("reset layout", 15);
         view_layouts->addButton("side-by-side", [&]() { setSideBySideLayout(); });

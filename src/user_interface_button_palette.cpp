@@ -98,8 +98,6 @@ void UIButtonPalette::checkInput(std::shared_ptr<Window> w)
         if ((col + 1) % columns == 0) height += button_size.y;
         col = (col + 1) % columns;
     }
-
-    if (involved) w->clearMouseEvents();
 }
 
 glm::vec2 UIButtonPalette::recalculateSize()

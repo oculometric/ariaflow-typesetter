@@ -45,32 +45,31 @@ void Application::run()
         edit_menu->setButtonDisabled(undo_button, !d->hasUndoStepsAvailable());
         edit_menu->setButtonDisabled(redo_button, !d->hasRedoStepsAvailable());
 
-        if (!is_modal) root_menu->checkInput(w);
-        root_menu->draw(r, w->getSize().x);
-
         if (is_modal) right_click_open = false;
         if (right_click_open)
         {
+            bool will_close = false;
+            if (w->wasMouseReleased(MOUSE_LEFT, false)) will_close = true;
             right_click_menu->checkInput(w, right_click_position);
             right_click_menu->draw(r, right_click_position);
-            auto evt = w->getMouseEvent();
-            while (evt.key != 0)
-            {
-                if (evt.key == KeyEvent::MOUSE_RIGHT && evt.pressed == false)
-                    right_click_position = w->getMousePosition();
-                else if (evt.pressed == false)
-                    right_click_open = false;
-                evt = w->getMouseEvent();
-            }
+            w->wasMousePressed(MOUSE_LEFT);
+            w->wasMouseReleased(MOUSE_LEFT);
+            w->wasMousePressed(MOUSE_RIGHT);
+            if (w->wasMouseReleased(MOUSE_RIGHT)) right_click_position = w->getMousePosition();
+            if (will_close) right_click_open = false;
+            w->setCursorType(CursorType::CURSOR_NORMAL, 4);
         }
         else if (!is_modal)
         {
-            if (w->isMouseDown(KeyEvent::MOUSE_RIGHT))
+            if (w->wasMouseReleased(MOUSE_RIGHT))
             {
                 right_click_open     = true;
                 right_click_position = w->getMousePosition();
             }
         }
+
+        if (!is_modal) root_menu->checkInput(w);
+        root_menu->draw(r, w->getSize().x);
 
         if (show_palette)
         {
@@ -134,9 +133,6 @@ void Application::run()
         if (w->wasShortcutTriggered("save_incremental") && !is_modal) fileSaveIncremental();
         if (w->shouldClose() && !is_modal) fileQuit();
 
-        w->clearMouseEvents();
-        w->clearKeyEvents();
-        w->clearCharEvents();
         r->finalise();
         r2->finalise();
     }

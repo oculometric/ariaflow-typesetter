@@ -42,15 +42,12 @@ void UIButton::draw(std::shared_ptr<UIRenderer> r)
 void UIButton::checkInput(std::shared_ptr<Window> w)
 {
     mouse_inside = insideRect(w->getMousePosition(), position, size);
-    if (!is_pressed && mouse_inside && checkForMouseDown(w)) is_pressed = true;
-    if (is_pressed && !w->isMouseDown(KeyEvent::MOUSE_LEFT))
+    if (!is_pressed && mouse_inside && w->wasMousePressed(MOUSE_LEFT)) is_pressed = true;
+    if (is_pressed && mouse_inside && w->wasMouseReleased(MOUSE_LEFT))
     {
-        if (mouse_inside)
-        {
-            if (callback_func != nullptr) callback_func();
-        }
-        is_pressed = false;
+        if (callback_func != nullptr) callback_func();
     }
+    if (is_pressed && !w->isMouseDown(MOUSE_LEFT)) is_pressed = false;
 }
 
 UILabel::UILabel(const std::string& text, TextAlign align, TextFlags flags, int icon, glm::vec2 offset)
@@ -107,14 +104,14 @@ glm::vec2 UIGrabbable::checkInput(std::shared_ptr<Window> w, glm::vec2 position,
     bool inside = insideRect(w->getMousePosition(), position, area_size);
     if (inside && !grabbed)
     {
-        if (checkForMouseDown(w)) grabbed = true;
+        if (w->wasMousePressed(MOUSE_LEFT)) grabbed = true;
     }
 
     if (grabbed)
     {
         position += w->getMouseDelta();
 
-        if (!w->isMouseDown(KeyEvent::MOUSE_LEFT)) grabbed = false;
+        if (!w->isMouseDown(MOUSE_LEFT)) grabbed = false;
     }
 
     if (inside || grabbed) w->setCursorType(cursor, 2);

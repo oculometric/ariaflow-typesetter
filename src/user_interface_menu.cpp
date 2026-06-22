@@ -140,7 +140,7 @@ void UIMenu::draw(std::shared_ptr<UIRenderer> r, glm::vec2 top_left)
 bool UIMenu::checkInput(std::shared_ptr<Window> w, glm::vec2 top_left)
 {
     glm::vec2 mouse  = w->getMousePosition();
-    bool down        = w->isMouseDown(KeyEvent::MOUSE_LEFT);
+    bool down        = w->isMouseDown(MOUSE_LEFT);
     bool inside_menu = insideRect(mouse, top_left, overall_size);
 
     for (auto& item : items)
@@ -161,7 +161,7 @@ bool UIMenu::checkInput(std::shared_ptr<Window> w, glm::vec2 top_left)
             item.is_clicked = (mouse_inside && down);
             if (mouse_inside)
             {
-                if (checkForMouseUp(w))
+                if (w->wasMouseReleased(MOUSE_LEFT))
                 {
                     if (item.callback != nullptr) item.callback();
                     inside_menu = false;
@@ -246,15 +246,15 @@ void UIRootMenu::checkInput(std::shared_ptr<Window> w)
 {
     float bottom     = getHeight();
     glm::vec2 mouse  = w->getMousePosition();
-    bool down        = w->isMouseDown(KeyEvent::MOUSE_LEFT);
+    bool down        = w->isMouseDown(MOUSE_LEFT);
     bool inside_menu = insideRect(mouse, { 0, 0 }, { 100000, bottom });
 
     if (!is_menu_open)
     {
-        if (inside_menu && checkForMouseDown(w))
+        if (inside_menu && w->wasMousePressed(MOUSE_LEFT))
         {
             is_menu_open = true;
-            w->clearMouseEvents();
+            w->wasMouseReleased(MOUSE_LEFT);
         }
         else
         {
@@ -282,7 +282,7 @@ void UIRootMenu::checkInput(std::shared_ptr<Window> w)
             item.is_clicked = (mouse_inside && down);
             if (mouse_inside)
             {
-                if (checkForMouseUp(w))
+                if (w->wasMouseReleased(MOUSE_LEFT))
                 {
                     if (item.callback != nullptr) item.callback();
                     is_menu_open = false;
@@ -293,7 +293,7 @@ void UIRootMenu::checkInput(std::shared_ptr<Window> w)
         }
     }
 
-    bool was_released = checkForMouseUp(w);
+    bool was_released = w->wasMouseReleased(MOUSE_LEFT);
 
     if (inside_menu) w->setCursorType(CURSOR_NORMAL, 10);
 

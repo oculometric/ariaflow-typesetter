@@ -13,28 +13,6 @@ bool AriaFlow::insideRect(glm::vec2 point, glm::vec2 top_left, glm::vec2 size)
     return true;
 }
 
-bool AriaFlow::checkForMouseDown(std::shared_ptr<Window> w)
-{
-    auto evt = w->getMouseEvent();
-    while (evt.key != 0)
-    {
-        if (evt.key == KeyEvent::MOUSE_LEFT && evt.pressed == true) { return true; }
-        evt = w->getMouseEvent();
-    }
-    return false;
-}
-
-bool AriaFlow::checkForMouseUp(std::shared_ptr<Window> w)
-{
-    auto evt = w->getMouseEvent();
-    while (evt.key != 0)
-    {
-        if (evt.key == KeyEvent::MOUSE_LEFT && evt.pressed == false) { return true; }
-        evt = w->getMouseEvent();
-    }
-    return false;
-}
-
 void AriaFlow::trackWindowResizeFixedSize(std::shared_ptr<Window> w, glm::vec2& top_left, glm::vec2 size)
 {
     glm::vec2 old_window_size = w->getLastSize();

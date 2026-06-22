@@ -16,15 +16,16 @@ static std::unordered_map<GLFWwindow*, Window*> windows;
 
 void Window::keyFunction(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    KeyEvent::Modifier modifiers = KeyEvent::NONE;
-    if (mods & GLFW_MOD_ALT) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::ALT);
-    if (mods & GLFW_MOD_CAPS_LOCK) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::CAPS);
-    if (mods & GLFW_MOD_CONTROL) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::CTRL);
-    if (mods & GLFW_MOD_NUM_LOCK) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::NUM);
-    if (mods & GLFW_MOD_SHIFT) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::SHIFT);
-    if (mods & GLFW_MOD_SUPER) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::SUPER);
-    windows[window]->key_events.push(
-        KeyEvent{ static_cast<uint16_t>(key), action == GLFW_PRESS, action == GLFW_REPEAT, modifiers });
+    ModifierKey modifiers = MODIFIER_NONE;
+    if (mods & GLFW_MOD_ALT) modifiers = modifiers | MODIFIER_ALT;
+    if (mods & GLFW_MOD_CAPS_LOCK) modifiers = modifiers | MODIFIER_CAPS;
+    if (mods & GLFW_MOD_CONTROL) modifiers = modifiers | MODIFIER_CTRL;
+    if (mods & GLFW_MOD_NUM_LOCK) modifiers = modifiers | MODIFIER_NUM;
+    if (mods & GLFW_MOD_SHIFT) modifiers = modifiers | MODIFIER_SHIFT;
+    if (mods & GLFW_MOD_SUPER) modifiers = modifiers | MODIFIER_SUPER;
+    InputResult result = { static_cast<InputButton>(key), action == GLFW_PRESS, action == GLFW_REPEAT,
+        modifiers };
+    windows[window]->key_events.insert({ result.key, result });
 
     if (action == GLFW_PRESS)
     {
@@ -32,7 +33,7 @@ void Window::keyFunction(GLFWwindow* window, int key, int scancode, int action, 
         {
             if (pair.second.key == static_cast<uint16_t>(key) &&
                 pair.second.modifiers ==
-                    (modifiers & (KeyEvent::ALT | KeyEvent::CTRL | KeyEvent::SHIFT | KeyEvent::SUPER)))
+                    (modifiers & (MODIFIER_ALT | MODIFIER_CTRL | MODIFIER_SHIFT | MODIFIER_SUPER)))
                 pair.second.pressed = true;
         }
     }
@@ -43,22 +44,24 @@ void Window::charFunction(GLFWwindow* window, unsigned int codepoint)
 
 void Window::mouseFunction(GLFWwindow* window, int button, int action, int mods)
 {
-    KeyEvent::Modifier modifiers;
-    if (mods & GLFW_MOD_ALT) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::ALT);
-    if (mods & GLFW_MOD_CAPS_LOCK) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::CAPS);
-    if (mods & GLFW_MOD_CONTROL) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::CTRL);
-    if (mods & GLFW_MOD_NUM_LOCK) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::NUM);
-    if (mods & GLFW_MOD_SHIFT) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::SHIFT);
-    if (mods & GLFW_MOD_SUPER) modifiers = (KeyEvent::Modifier)(modifiers | KeyEvent::SUPER);
-    KeyEvent::Key but;
+    ModifierKey modifiers = MODIFIER_NONE;
+    if (mods & GLFW_MOD_ALT) modifiers = modifiers | MODIFIER_ALT;
+    if (mods & GLFW_MOD_CAPS_LOCK) modifiers = modifiers | MODIFIER_CAPS;
+    if (mods & GLFW_MOD_CONTROL) modifiers = modifiers | MODIFIER_CTRL;
+    if (mods & GLFW_MOD_NUM_LOCK) modifiers = modifiers | MODIFIER_NUM;
+    if (mods & GLFW_MOD_SHIFT) modifiers = modifiers | MODIFIER_SHIFT;
+    if (mods & GLFW_MOD_SUPER) modifiers = modifiers | MODIFIER_SUPER;
+    InputButton but;
     switch (button)
     {
-    case GLFW_MOUSE_BUTTON_LEFT:   but = KeyEvent::MOUSE_LEFT; break;
-    case GLFW_MOUSE_BUTTON_RIGHT:  but = KeyEvent::MOUSE_RIGHT; break;
-    case GLFW_MOUSE_BUTTON_MIDDLE: but = KeyEvent::MOUSE_MIDDLE; break;
+    case GLFW_MOUSE_BUTTON_LEFT:   but = MOUSE_LEFT; break;
+    case GLFW_MOUSE_BUTTON_RIGHT:  but = MOUSE_RIGHT; break;
+    case GLFW_MOUSE_BUTTON_MIDDLE: but = MOUSE_MIDDLE; break;
     }
-    windows[window]->mouse_events.push(
-        KeyEvent{ but, action == GLFW_PRESS, action == GLFW_REPEAT, modifiers });
+
+    InputResult result = { static_cast<InputButton>(but), action == GLFW_PRESS, action == GLFW_REPEAT,
+        modifiers };
+    windows[window]->mouse_events.insert({ result.key, result });
 }
 
 void Window::scrollFunction(GLFWwindow* window, double xoffset, double yoffset)
@@ -66,6 +69,7 @@ void Window::scrollFunction(GLFWwindow* window, double xoffset, double yoffset)
 
 Window::Window()
 {
+    // init glfw if it isnt already
     if (windows.empty())
     {
 #if defined(_WIN32)
@@ -74,23 +78,30 @@ Window::Window()
 #endif
         glfwInit();
     }
+    // create window
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     window = glfwCreateWindow(1024, 1024, "ariaflow", nullptr, nullptr);
+    glfwFocusWindow(window);
+    glfwShowWindow(window);
+    glfwSwapInterval(1);
+
+    // get size
     int x, y;
     glfwGetFramebufferSize(window, &x, &y);
     last_frame_size = current_frame_size = { x, y };
-    makeCurrentContext();
-    glfwFocusWindow(window);
-    glfwShowWindow(window);
+
+    // configure window input
     glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
     glfwSetKeyCallback(window, keyFunction);
     glfwSetCharCallback(window, charFunction);
     glfwSetMouseButtonCallback(window, mouseFunction);
     glfwSetScrollCallback(window, scrollFunction);
+
+    // load cursors
     cursors[CURSOR_NORMAL]            = nullptr;
     cursors[CURSOR_RESIZE_HORIZONTAL] = glfwCreateStandardCursor(GLFW_RESIZE_EW_CURSOR);
     cursors[CURSOR_RESIZE_VERTICAL]   = glfwCreateStandardCursor(GLFW_RESIZE_NS_CURSOR);
@@ -101,25 +112,27 @@ Window::Window()
     cursors[CURSOR_HAND]              = glfwCreateStandardCursor(GLFW_POINTING_HAND_CURSOR);
     cursors[CURSOR_BUSY]              = glfwCreateStandardCursor(GLFW_NOT_ALLOWED_CURSOR);
 
+    // set icon
     GLFWimage image;
     int img_channels;
     image.pixels = stbi_load_from_memory(icon, static_cast<int>(icon_size), &image.width, &image.height,
         &img_channels, STBI_rgb_alpha);
-
     glfwSetWindowIcon(window, 1, &image);
     stbi_image_free(image.pixels);
 
-    glfwSwapInterval(1);
+    // configure opengl
+    makeCurrentContext();
     if (windows.empty())
     {
         if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
             throw std::runtime_error("failed to initialize GLAD");
     }
-
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_GEQUAL);
     glDepthRange(-1000.0f, 1000.0f);
     glDisable(GL_CULL_FACE);
+
+    // insert into the window map for input redirection
     windows[window] = this;
 }
 
@@ -133,15 +146,79 @@ Window::~Window()
 
 void Window::setTitle(const std::string& title) { glfwSetWindowTitle(window, title.c_str()); }
 
-KeyEvent Window::getKeyEvent()
+bool Window::isMouseDown(InputButton button) const
 {
-    if (key_events.empty()) return KeyEvent();
-    else
+    int but;
+    switch (button)
     {
-        KeyEvent tmp = key_events.front();
-        key_events.pop();
-        return tmp;
+    case MOUSE_LEFT:   but = GLFW_MOUSE_BUTTON_LEFT; break;
+    case MOUSE_RIGHT:  but = GLFW_MOUSE_BUTTON_RIGHT; break;
+    case MOUSE_MIDDLE: but = GLFW_MOUSE_BUTTON_MIDDLE; break;
+    default:           return false;
     }
+    return glfwGetMouseButton(window, but);
+}
+
+InputResult Window::wasMousePressed(InputButton button, bool consume)
+{
+    auto [first, last] = mouse_events.equal_range(button);
+    for (auto it = first; it != last; ++it)
+    {
+        if (it->second.pressed)
+        {
+            InputResult result = it->second;
+            if (consume) mouse_events.erase(it);
+            return result;
+        }
+    }
+    return InputResult{};
+}
+
+InputResult Window::wasMouseReleased(InputButton button, bool consume)
+{
+    auto [first, last] = mouse_events.equal_range(button);
+    for (auto it = first; it != last; ++it)
+    {
+        if (!it->second.pressed)
+        {
+            InputResult result = it->second;
+            if (consume) mouse_events.erase(it);
+            return result;
+        }
+    }
+    return InputResult{};
+}
+
+bool Window::isKeyDown(uint16_t key) const { return glfwGetKey(window, key) == GLFW_PRESS; }
+
+InputResult Window::wasKeyPressed(uint16_t key, bool allow_repeat, bool consume)
+{
+    auto [first, last] = key_events.equal_range(static_cast<InputButton>(key));
+    for (auto it = first; it != last; ++it)
+    {
+        if (it->second.pressed || (allow_repeat && it->second.repeat))
+        {
+            InputResult result = it->second;
+            if (consume) key_events.erase(it);
+            return result;
+        }
+    }
+    return InputResult{};
+}
+
+InputResult Window::wasKeyReleased(uint16_t key, bool consume)
+{
+    auto [first, last] = key_events.equal_range(static_cast<InputButton>(key));
+    for (auto it = first; it != last; ++it)
+    {
+        if (!it->second.pressed)
+        {
+            InputResult result = it->second;
+            if (consume) key_events.erase(it);
+            return result;
+        }
+    }
+    return InputResult{};
 }
 
 unsigned int Window::getCharEvent()
@@ -155,54 +232,17 @@ unsigned int Window::getCharEvent()
     }
 }
 
-KeyEvent Window::getMouseEvent()
+void Window::poll(bool clear_events)
 {
-    if (mouse_events.empty()) return KeyEvent();
-    else
-    {
-        KeyEvent tmp = mouse_events.front();
-        mouse_events.pop();
-        return tmp;
-    }
-}
-
-glm::vec2 Window::getMousePosition() const { return last_mouse_position; }
-
-glm::vec2 Window::getMouseDelta() const { return mouse_delta; }
-
-bool Window::isMouseDown(KeyEvent::Key mouse_button) const
-{
-    int but;
-    switch (mouse_button)
-    {
-    case KeyEvent::MOUSE_LEFT:   but = GLFW_MOUSE_BUTTON_LEFT; break;
-    case KeyEvent::MOUSE_RIGHT:  but = GLFW_MOUSE_BUTTON_RIGHT; break;
-    case KeyEvent::MOUSE_MIDDLE: but = GLFW_MOUSE_BUTTON_MIDDLE; break;
-    default:                     return false;
-    }
-    return glfwGetMouseButton(window, but);
-}
-
-void Window::clearMouseEvents()
-{
-    while (!mouse_events.empty()) mouse_events.pop();
-}
-
-bool Window::isKeyDown(KeyEvent::Key key) const { return glfwGetKey(window, key) == GLFW_PRESS; }
-
-void Window::clearKeyEvents()
-{
-    while (!key_events.empty()) key_events.pop();
-}
-
-void Window::clearCharEvents()
-{
-    while (!char_events.empty()) char_events.pop();
-}
-
-void Window::poll()
-{
+    // reset things
     last_cursor_priority = 0;
+    if (clear_events)
+    {
+        while (!char_events.empty()) char_events.pop();
+        key_events.clear();
+        mouse_events.clear();
+    }
+
     glfwPollEvents();
     last_frame_size = current_frame_size;
     int x, y;
@@ -221,10 +261,8 @@ void Window::present() const
 {
     glfwSetCursor(window, cursors[current_cursor]);
     glfwSwapBuffers(window);
-    int width  = getSize().x;
-    int height = getSize().y;
-    glViewport(0, 0, width, height);
-    glClearColor(0.08f, 0.08f, 0.08f, 1.0f);
+    glViewport(0, 0, getSize().x, getSize().y);
+    glClearColor(clear_colour.x, clear_colour.y, clear_colour.z, 1.0f);
     glClearDepth(-1000.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
@@ -247,8 +285,8 @@ void Window::setCursorType(CursorType t, int priority)
     }
 }
 
-void Window::registerShortcut(const std::string& action, KeyEvent::Modifier modifiers, uint16_t key)
-{ shortcuts[action] = KeyEvent{ key, false, false, modifiers }; }
+void Window::registerShortcut(const std::string& action, ModifierKey modifiers, uint16_t key)
+{ shortcuts[action] = InputResult{ static_cast<InputButton>(key), false, false, modifiers }; }
 
 bool Window::wasShortcutTriggered(const std::string& action)
 {

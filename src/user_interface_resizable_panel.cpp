@@ -80,19 +80,21 @@ void UIResizablePanel::checkInput(std::shared_ptr<Window> w)
             { 16.0f, 16.0f }))
     {
         skip_resize = true;
-        if (button_a_down && checkForMouseUp(w) && button_a_callback != nullptr) button_a_callback();
-        if (!button_a_down && checkForMouseDown(w)) button_a_down = true;
+        if (button_a_down && w->wasMouseReleased(MOUSE_LEFT) && button_a_callback != nullptr)
+            button_a_callback();
+        if (!button_a_down && w->wasMousePressed(MOUSE_LEFT)) button_a_down = true;
     }
     if (insideRect(w->getMousePosition(),
             { panel_position.x + panel_size.x - 32.0f - spacing, panel_position.y + spacing },
             { 16.0f, 16.0f }))
     {
         skip_resize = true;
-        if (button_b_down && checkForMouseUp(w) && button_b_callback != nullptr) button_b_callback();
-        if (!button_b_down && checkForMouseDown(w)) button_b_down = true;
+        if (button_b_down && w->wasMouseReleased(MOUSE_LEFT) && button_b_callback != nullptr)
+            button_b_callback();
+        if (!button_b_down && w->wasMousePressed(MOUSE_LEFT)) button_b_down = true;
     }
     if (button_a_down || button_b_down) skip_resize = true;
-    if (!w->isMouseDown(KeyEvent::MOUSE_LEFT))
+    if (!w->isMouseDown(MOUSE_LEFT))
     {
         button_a_down = false;
         button_b_down = false;

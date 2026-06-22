@@ -252,7 +252,7 @@ void Window::registerShortcut(const std::string& action, KeyEvent::Modifier modi
 
 bool Window::wasShortcutTriggered(const std::string& action)
 {
-    if (!shortcuts.contains(action)) return false;
+    if (!shortcuts.count(action)) return false;
     if (shortcuts[action].pressed)
     {
         shortcuts[action].pressed = false;
@@ -263,7 +263,7 @@ bool Window::wasShortcutTriggered(const std::string& action)
 
 void Window::triggerShortcut(const std::string& action)
 {
-    if (shortcuts.contains(action)) shortcuts[action].pressed = true;
+    if (shortcuts.count(action)) shortcuts[action].pressed = true;
 }
 
 void Window::writeClipboard(const std::string& value) { glfwSetClipboardString(window, value.c_str()); }

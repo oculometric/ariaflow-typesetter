@@ -146,4 +146,32 @@ mutable without having to redraw everything.
 ui elements, when created, allocate things they want (an icon, some text), and can then modify them at any
 time.
 those modifications set flags within the object that the underlying data needs to be updated.
+
+// TODO: ability to configure whether we use blended alpha or dithered alpha?
+
+RENDERER
+  vertices
+  indices
+  modified?
+
+  -> create TEXT
+  -> set modified
+
+BACKING
+  vertices start
+  indices start
+  quad count
+
+TEXT
+  position
+  size
+  colour a
+  colour b
+
+  (renderer)
+  (backing)
+
+  -> on created, allocate backing, set modified
+  -> on destroyed, release backing, set modified
+  -> on set position, modify backing, set modified
 */

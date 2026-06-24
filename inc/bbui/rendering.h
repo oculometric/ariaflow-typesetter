@@ -276,4 +276,7 @@ public:
     void draw(std::shared_ptr<Window> window) const;
 };
 
+// TODO: ability to configure whether we use blended alpha or dithered alpha?
+// TODO: ability to configure whether we use linear or nearest interpolation?
+
 }; // namespace BBUI

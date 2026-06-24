@@ -149,29 +149,50 @@ those modifications set flags within the object that the underlying data needs t
 
 // TODO: ability to configure whether we use blended alpha or dithered alpha?
 
-RENDERER
-  vertices
-  indices
-  modified?
+RENDERER (friend BACKING)
+  (vertices)
+  (indices)
+  (dead quad count)
+  (current array id)
+  (modified)
 
   -> create TEXT
-  -> set modified
+  -> create QUAD
+  -> create NINESLICE
+  -> create ICON
+  -> create IMAGE
+
+  -> construct : init graphics
+  -> draw : update mesh arrays if modified
 
 BACKING
-  vertices start
-  indices start
-  quad count
+  (vertices start)
+  (indices start)
+  (quad count)
+  (array id)
 
-TEXT
+  -> ensure backing validity and size
+  -> write data to arrays on renderer
+  -> release backing
+
+TEXT_T
   position
   size
   colour a
   colour b
+  text
 
   (renderer)
   (backing)
 
-  -> on created, allocate backing, set modified
-  -> on destroyed, release backing, set modified
-  -> on set position, modify backing, set modified
+  (-> construct : update)
+  -> update : ensure backing validity, write data to backing, set modified
+  -> destruct : release backing, set modified
+  -> set position : update
+  -> set size : update
+  -> set colour a : update
+  -> set colour b : update
+  -> set text : update
+
+TEXT : std::shared_ptr<TEXT_T>
 */

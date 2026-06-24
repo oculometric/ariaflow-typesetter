@@ -8,10 +8,12 @@
 namespace BBUI
 {
 
+class Window;
+
 struct Texture final
 {
     const unsigned char* data;
-    const unsigned char* size;
+    const size_t size;
 };
 
 struct Vertex final
@@ -35,26 +37,25 @@ struct Font final
 
 class Backend
 {
-protected:
-    typedef unsigned int Handle;
-
 public:
     Backend(Font font, Texture slice_atlas, Texture icon_atlas) {}
-    Backend()                            = delete;
+    Backend()                            = default;
     Backend(const Backend& other)        = delete;
     Backend(Backend&& other)             = delete;
     void operator=(const Backend& other) = delete;
     void operator=(Backend&& other)      = delete;
     virtual ~Backend()                   = default;
 
-    virtual void mesh(const std::vector<Vertex>& vertices, const std::vector<Index>&) {};
-    virtual void bind() {};
-    virtual void draw() {};
+    virtual void mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices) {};
+    virtual void bind(std::shared_ptr<Window> window) const {};
+    virtual void draw(std::shared_ptr<Window> window) const {};
 };
 
 class Backend_OpenGL final : Backend
 {
 private:
+    typedef unsigned int Handle;
+
     Handle vertex_buffer       = 0;
     Handle index_buffer        = 0;
     Handle vertex_array_object = 0;
@@ -76,9 +77,9 @@ public:
     void operator=(Backend_OpenGL&& other)      = delete;
     ~Backend_OpenGL() override;
 
-    void mesh(const std::vector<Vertex>& vertices, const std::vector<Index>&) override;
-    void bind() override;
-    void draw() override;
+    void mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices) override;
+    void bind(std::shared_ptr<Window> window) const override;
+    void draw(std::shared_ptr<Window> window) const override;
 };
 
 class Renderer final : std::enable_shared_from_this<Renderer>
@@ -272,74 +273,7 @@ public:
     std::shared_ptr<Icon> createIcon();
     std::shared_ptr<Quad> createQuad();
 
-    void draw(std::shared_ptr<Window> window)
-        const; // commit the vertex and index buffers to the gpu (if needed), prepare the drawing
-               // environment, draw the geometry, if there are too many dead quads then clear all the
-               // backing data
+    void draw(std::shared_ptr<Window> window) const;
 };
 
 }; // namespace BBUI
-
-/*
-what if instead, the renderer can allocate objects which kinda like smart pointers, represent requirements
-for the renderer so they can be modified by the owner (reference count is kept), and those modifications
-propagate back to the renderer when draw is called (i.e. we check if any changes were made, and if so then
-we update the geometry).
-so the user has an object which contains some attributes (position, size, colours, and more which get
-transmuted into the underlying data according to functions depending upon the object type)
-and the renderer knows about those objects primarily - the backing data is linked to them, but it can be
-mutable without having to redraw everything.
-ui elements, when created, allocate things they want (an icon, some text), and can then modify them at any
-time.
-those modifications set flags within the object that the underlying data needs to be updated.
-
-// TODO: ability to configure whether we use blended alpha or dithered alpha?
-
-RENDERER (friend BACKING)
-  (vertices)
-  (indices)
-  (dead quad count)
-  (current array id)
-  (modified)
-
-  -> create TEXT
-  -> create QUAD
-  -> create NINESLICE
-  -> create ICON
-  -> create IMAGE
-
-  -> construct : init graphics
-  -> draw : update mesh arrays if modified
-
-BACKING
-  (vertices start)
-  (indices start)
-  (quad count)
-  (array id)
-
-  -> ensure : check backing id validity and size
-  -> write : copy data to arrays on renderer
-  -> release : free backing, clear array data, mark as dead
-
-TEXT_T
-  position
-  size
-  colour a
-  colour b
-  text
-
-  (renderer)
-  (backing)
-
-  (-> construct : update)
-  -> update : ensure backing validity, write data to backing, set modified
-  -> destruct : release backing, set modified
-
-  -> set position : update
-  -> set size : update
-  -> set colour a : update
-  -> set colour b : update
-  -> set text : update
-
-TEXT : std::shared_ptr<TEXT_T>
-*/

@@ -1,8 +1,7 @@
 #pragma once
 
 #include <array>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
+#include <glm/glm.hpp>
 #include <map>
 #include <queue>
 #include <string>
@@ -10,7 +9,7 @@
 struct GLFWwindow;
 struct GLFWcursor;
 
-namespace AriaFlow
+namespace BBUI
 {
 
 enum ModifierKey : uint8_t
@@ -160,7 +159,8 @@ private:
     std::map<std::string, InputResult> shortcuts;
 
 public:
-    Window();
+    Window() = delete;
+    Window(const struct Texture& icon);
     Window(const Window& other)         = delete;
     Window(Window&& other)              = delete;
     void operator=(const Window& other) = delete;
@@ -205,4 +205,4 @@ private:
     static void scrollFunction(GLFWwindow* window, double xoffset, double yoffset);
 };
 
-}; // namespace AriaFlow
+}; // namespace BBUI

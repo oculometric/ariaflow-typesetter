@@ -1,8 +1,8 @@
-#include "window.h"
+#include "bbui/window.h"
+
+#include "bbui/rendering.h"
 
 #define GLFW_INCLUDE_NONE
-#include "icon.h"
-
 #include <GLFW/glfw3.h>
 #include <glad.h>
 #include <iostream>
@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include <unordered_map>
 
-using namespace AriaFlow;
+using namespace BBUI;
 
 static std::unordered_map<GLFWwindow*, Window*> windows;
 
@@ -67,7 +67,7 @@ void Window::mouseFunction(GLFWwindow* window, int button, int action, int mods)
 void Window::scrollFunction(GLFWwindow* window, double xoffset, double yoffset)
 { windows[window]->scroll_delta += static_cast<float>(yoffset); }
 
-Window::Window()
+Window::Window(const Texture& icon)
 {
     // init glfw if it isnt already
     if (windows.empty())
@@ -115,7 +115,7 @@ Window::Window()
     // set icon
     GLFWimage image;
     int img_channels;
-    image.pixels = stbi_load_from_memory(icon, static_cast<int>(icon_size), &image.width, &image.height,
+    image.pixels = stbi_load_from_memory(icon.data, static_cast<int>(icon.size), &image.width, &image.height,
         &img_channels, STBI_rgb_alpha);
     glfwSetWindowIcon(window, 1, &image);
     stbi_image_free(image.pixels);

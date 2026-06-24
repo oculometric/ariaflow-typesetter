@@ -16,6 +16,13 @@ struct Texture final
     const size_t size;
 };
 
+struct Font final
+{
+    Texture regular_atlas;
+    Texture bold_atlas;
+    glm::vec2 glyph_size;
+};
+
 struct Vertex final
 {
     glm::vec3 position;
@@ -27,13 +34,6 @@ struct Vertex final
 };
 
 typedef unsigned int Index;
-
-struct Font final
-{
-    Texture regular_atlas;
-    Texture bold_atlas;
-    glm::vec2 glyph_size;
-};
 
 class Backend
 {

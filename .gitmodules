@@ -1,0 +1,3 @@
+[submodule "lib/bbui"]
+	path = lib/bbui
+	url = https://github.com/oculometric/bbui

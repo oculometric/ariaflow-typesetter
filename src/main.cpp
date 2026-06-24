@@ -1,3 +1,6 @@
+#include <bbui.h>
+
+
 #include "application.h"
 
 int main()
